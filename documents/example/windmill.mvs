@@ -1,0 +1,60 @@
+Application
+ Task: T1
+ Period: 4
+ Offset: 0
+
+ Task: T2
+ Period: 6
+ Offset: 0
+
+ Task: T3
+ Period: 6
+ Offset: 0
+
+ Task: T4
+ Period: 6
+ Offset: 40
+
+Dependencies
+ T2 -> T3 : 2
+
+Platform
+ Proc: P1
+ Sch: RM
+
+ Proc: P2
+ Sch: RM
+
+ Bus: b1
+ Arb: FIFO
+ Speed: 2
+
+Mapping
+ T1 : P1
+ T2 : P1
+ T3 : P2
+ T4 : P2
+
+Characteristics
+ T1 @ P1
+  Bcet: 2
+  Wcet: 2
+
+ T2 @ P1
+  Bcet: 1
+  Wcet: 1
+
+ T3 @ P1
+  Bcet: 5
+  Wcet: 5
+
+ T3 @ P2
+  Bcet: 2
+  Wcet: 2
+
+ T4 @ P2
+  Bcet: 2
+  Wcet: 3
+
+Property
+ Schedule?

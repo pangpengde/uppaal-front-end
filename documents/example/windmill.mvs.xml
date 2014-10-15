@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_1.dtd'><nta><declaration>clock TM;
+
+
+
+const int FP = 0, RM = 1, EDF = 2; //symbolic representation of scheduling principles
+
+
+
+
+
+
+
+//System-Dependent Decl
+const int M = 3;
+const int N = 2;
+const int MN = 5;
+
+const int[FP,EDF] processorScheduling[M] = {FP, RM, RM};
+const int[0,MN] onPE[M][N] = {{5, 0},{1, 2},{3, 4}};
+const int fpris[MN] = {1, 2, 3, 4, 5};
+const int pi[MN] = {4, 6, 6, 6, 6};
+const int offset[MN] = {0, 0, 0, 40, 0};
+
+const bool origdep[MN][MN] = {{0, 0, 0, 0, 0},{0, 0, 0, 0, 0},{0, 0, 0, 0, 1},{0, 0, 0, 0, 0},{0, 1, 0, 0, 0}};
+
+bool depend[MN][MN] = {{0, 0, 0, 0, 0},{0, 0, 0, 0, 0},{0, 0, 0, 0, 1},{0, 0, 0, 0, 0},{0, 1, 0, 0, 0}};
+
+int[1,MN] pri[MN] = {1,2,3,5,4}; //EDF scheduling priorities
+
+const int NRSteps=5, NROffSteps=13, MAXOffStep=40, MAXStep=52, MAXListSize=13;
+
+const int[0,MAXOffStep] OffSteps[NROffSteps] = {4,6,8,12,16,18,20,24,28,30,32,36,40};
+const int[1,MN] OffPrios[NROffSteps][MN] = {{1,2,3,5,4},{4,1,2,5,3},{1,2,3,5,4},{1,2,3,5,4},{1,2,3,5,4},{4,1,2,5,3},{1,2,3,5,4},{1,2,3,5,4},{1,2,3,5,4},{4,1,2,5,3},{1,2,3,5,4},{1,2,3,5,4},{1,2,3,5,4}};
+
+const int[0,MAXStep] Steps[NRSteps] = {42,44,46,48,52};
+const int[1,MN] Prios[NRSteps][MN] = {{4,1,2,5,3},{1,3,4,2,5},{2,3,4,1,5},{1,2,3,5,4},{1,3,4,2,5}};
+
+const int MaxExe=3;
+const int MaxPi=6;
+
+//System-Independent Decl
+//Synchronization channels
+broadcast chan reschedule; //broadcast channel for reschelduling after a task has finished
+chan synchronize[M], schedule[M];
+chan ready[M], run[M], preempt[M];
+urgent chan finish[M];
+
+int[0,MN] tauid[M]; //transfer of local taskid from task to controller
+int[0,MN] curtid[M]; //variable used to hold the id of the task currently chosen
+int[0,MN] ltid[M]; //variable used to hold the id of the task currently running
+bool Released[MN]; //array of tasks which have issued ready signals
+bool Enabled[MN]; //array of tasks which are not awaiting dependencies to be resolved
+bool rescheduleNeeded; //indicator for the need for a global reschedule
+bool Finished[MN]; //array specifying which tasks are finished now
+bool WaitDep[MN]; //array for tasks which are awaiting dependencies to be resolved
+bool running[M]; //indicating wether a task is currently running on the processor
+bool missedDeadline = false; //indicator for a missed deadline
+
+
+//Locking mechanisms
+bool disc[MN]; //locking mechanism for ensuring full discretization run
+bool taskFinishing[M]; //locking mechanism for ensuring reaction to all finish signals before any ready signals
+
+//function checking for dependencies for task t
+bool taskHasDependency(int t) {
+  for (ini : int[0,MN-1]) {    
+    if (depend[t][ini]) {
+      return true;
+    }
+  }
+  return false;
+}
+
+//function updating dependencies when task t has finished
+void opdDep(int t) {
+  for (ini : int[0,MN-1]) {
+    depend[ini][t]=false;
+  }
+}
+
+
+//function checking for existance of boolean value in array of size M
+bool lockPE(bool la[M]) {
+  for (ini : int[0,M-1]) {    
+    if (la[ini]) {
+      return true;
+    }
+  }
+  return false;
+}
+
+//function checking for existance of boolean value in array of size MN
+bool lockT(bool pen[MN]) {
+  bool b = false;
+  for (ini : int[0,MN-1]) {
+    if (pen[ini] == true) {
+      return true;  
+    }
+  }
+  return false;
+}
+
+//function checking if task t is on processing element p
+bool isOnPE(int t, int p){
+  for(i:int[0,N-1]){
+    if(onPE[p-1][i]==t) return true;
+  }
+  return false;
+}
+
+</declaration><template><name>Scheduler</name><parameter>const int pe</parameter><declaration>int[0,MN] lcri, lcri2; //variables used to hold the criterion of the task currently chosen
+int[0,MaxPi] lcrirm;
+bool aTaskIsReady;
+
+void noTasksReady() {
+  curtid[pe-1]=0;
+}
+
+void findHighestPriority() {
+  for (i : int[0,MN-1]) {
+    if (isOnPE(i+1,pe)) {
+      if (Enabled[i]) {
+	if (processorScheduling[pe-1] == FP &amp;&amp; (fpris[i] &lt; lcri)) {
+	  curtid[pe-1]=i+1;
+	  lcri=fpris[i];
+        }
+	if (processorScheduling[pe-1] == RM &amp;&amp; (pi[i] &lt; lcrirm || (pi[i] == lcrirm &amp;&amp; fpris[i] &lt; lcri2))) {
+	  curtid[pe-1]=i+1;
+	  lcrirm=pi[i];
+	  lcri2=fpris[i];
+        }
+        if (processorScheduling[pe-1] == EDF &amp;&amp; (pri[i] &lt; lcri || (pri[i] == lcri &amp;&amp; fpris[i] &lt; lcri2))) {
+          curtid[pe-1]=i+1;
+          lcri=pri[i];
+	  lcri2=fpris[i];
+        }
+      }
+    }
+  }
+}
+
+void tasksReadyOnProc() {
+  aTaskIsReady = false;
+  for (i : int[0,MN-1]) {
+    if (isOnPE(i+1,pe)) {
+      if (Enabled[i]) {
+        aTaskIsReady = true;
+          if (processorScheduling[pe-1] == FP) {
+            lcri = fpris[i];
+          }
+          if (processorScheduling[pe-1] == RM) {
+            lcrirm = pi[i];
+	    lcri2 = fpris[i];
+          }
+          if (processorScheduling[pe-1] == EDF) {
+            lcri = pri[i];
+	    lcri2 = fpris[i];
+          }
+          curtid[pe-1]=i+1;
+          return;
+      }
+    }
+  }
+}
+
+</declaration><location id="id0" x="-224" y="-160"><name x="-240" y="-192">Idle</name></location><location id="id1" x="24" y="-160"><name x="-16" y="-192">Scheduling</name><committed/></location><init ref="id0"/><transition><source ref="id1"/><target ref="id0"/><label kind="guard" x="-160" y="-96">aTaskIsReady</label><label kind="synchronisation" x="-160" y="-64">//Scheduler finishing
+schedule[pe-1]!</label><label kind="assignment" x="-160" y="-80">findHighestPriority()</label><nail x="-8" y="-96"/><nail x="-192" y="-96"/></transition><transition><source ref="id1"/><target ref="id0"/><label kind="guard" x="-160" y="-296">!aTaskIsReady</label><label kind="synchronisation" x="-160" y="-264">//Scheduler finishing
+schedule[pe-1]!</label><label kind="assignment" x="-160" y="-280">noTasksReady()</label><nail x="-8" y="-224"/><nail x="-192" y="-224"/></transition><transition><source ref="id0"/><target ref="id1"/><label kind="synchronisation" x="-184" y="-216">//Scheduler starting
+schedule[pe-1]?</label><label kind="assignment" x="-184" y="-184">tasksReadyOnProc()</label></transition></template><template><name>Control</name><parameter>const int pe</parameter><declaration>bool processorNotRunning() {
+  return (!running[pe-1] &amp;&amp; curtid[pe-1] != 0);
+}
+
+void setRunningTaskId() {
+  tauid[pe-1]=curtid[pe-1];
+  ltid[pe-1] = curtid[pe-1];
+}
+
+bool noSchedulingChange() {
+  return ((ltid[pe-1]==curtid[pe-1] &amp;&amp; running[pe-1]) || curtid[pe-1]==0);
+}
+
+bool runningTaskHasLowerPriority() {
+  return (ltid[pe-1]!=curtid[pe-1] &amp;&amp; running[pe-1]);
+}
+
+
+</declaration><location id="id2" x="-640" y="64" color="#ffffff"><name x="-672" y="32">PEtoPEComm</name><committed/></location><location id="id3" x="-448" y="64" color="#ffffff"><name x="-496" y="32">PEtoAPPComm</name><committed/></location><location id="id4" x="-448" y="224" color="#ffffff"><name x="-488" y="192">ExecutingChange</name><committed/></location><location id="id5" x="-448" y="-96"><name x="-504" y="-128">ReadyForScheduling</name><committed/></location><location id="id6" x="-256" y="-96"><name x="-266" y="-126">Scheduling</name><committed/></location><location id="id7" x="-256" y="-256"><name x="-266" y="-286">Synchronizing</name><committed/></location><location id="id8" x="-448" y="-256" color="#ffffff"><name x="-496" y="-288">APPtoPEComm</name><committed/></location><location id="id9" x="-448" y="-416" color="#ffffff"><name x="-458" y="-446">Idle</name></location><init ref="id9"/><transition><source ref="id2"/><target ref="id9"/><label kind="guard" x="-624" y="-504">rescheduleNeeded</label><label kind="synchronisation" x="-624" y="-488">reschedule!</label><label kind="assignment" x="-624" y="-472">rescheduleNeeded=false</label><nail x="-640" y="-448"/><nail x="-448" y="-448"/></transition><transition><source ref="id2"/><target ref="id9"/><label kind="guard" x="-608" y="-48">!rescheduleNeeded</label><nail x="-608" y="32"/><nail x="-608" y="-416"/></transition><transition><source ref="id9"/><target ref="id5"/><label kind="guard" x="-544" y="-232">!lockT(disc)</label><label kind="synchronisation" x="-544" y="-216">reschedule?</label><nail x="-544" y="-384"/><nail x="-544" y="-96"/></transition><transition><source ref="id4"/><target ref="id2"/><label kind="synchronisation" x="-624" y="184">run[pe-1]!</label><label kind="assignment" x="-624" y="200">running[pe-1]=true</label><nail x="-640" y="224"/></transition><transition><source ref="id3"/><target ref="id2"/><label kind="guard" x="-608" y="48">noSchedulingChange()</label></transition><transition><source ref="id3"/><target ref="id4"/><label kind="guard" x="-416" y="128">processorNotRunning()</label><label kind="assignment" x="-416" y="144">setRunningTaskId()</label><nail x="-416" y="96"/><nail x="-416" y="192"/></transition><transition><source ref="id3"/><target ref="id4"/><label kind="guard" x="-624" y="104">runningTaskHasLowerPriority()</label><label kind="synchronisation" x="-560" y="120">preempt[pe-1]!</label><label kind="assignment" x="-576" y="136">setRunningTaskId()</label><nail x="-480" y="96"/><nail x="-480" y="192"/></transition><transition><source ref="id6"/><target ref="id3"/><label kind="synchronisation" x="-416" y="-32">//Wait for scheduler
+schedule[pe-1]?</label><nail x="-256" y="-32"/><nail x="-448" y="-32"/></transition><transition><source ref="id5"/><target ref="id6"/><label kind="synchronisation" x="-416" y="-96">//Activate scheduler
+schedule[pe-1]!</label></transition><transition><source ref="id7"/><target ref="id5"/><label kind="synchronisation" x="-416" y="-192">//Wait for synchronizer
+synchronize[pe-1]?</label><nail x="-256" y="-192"/><nail x="-448" y="-192"/></transition><transition><source ref="id8"/><target ref="id7"/><label kind="synchronisation" x="-416" y="-256">//activate synchronizer
+synchronize[pe-1]!</label></transition><transition><source ref="id9"/><target ref="id8"/><label kind="guard" x="-528" y="-384">!lockT(disc)</label><label kind="synchronisation" x="-528" y="-368">//Get a ready signal
+ready[pe-1]?</label><label kind="assignment" x="-528" y="-336">Released[tauid[pe-1]-1]=true</label></transition><transition><source ref="id9"/><target ref="id8"/><label kind="guard" x="-352" y="-400">!lockT(disc)</label><label kind="synchronisation" x="-352" y="-384">//Get a finish signal
+finish[pe-1]?</label><label kind="assignment" x="-352" y="-352">running[pe-1]=false,
+opdDep(tauid[pe-1]-1),
+Enabled[tauid[pe-1]-1]=false</label><nail x="-352" y="-384"/><nail x="-352" y="-288"/></transition></template><template><name>Synchronizer</name><parameter>const int pe</parameter><declaration>bool depCh; //flag used if a dependency has been changed
+
+
+bool aDependencyHasChanged() {
+  return (depCh);
+}
+
+void setGlobalReschedule() {
+  depCh=false;
+  rescheduleNeeded = true;
+}
+
+
+
+void syncFinish() {
+  for (i : int[0,MN-1]) {
+    if (WaitDep[i] &amp;&amp; !taskHasDependency(i)) {
+      Enabled[i]=true;
+      WaitDep[i]=false; 
+      depCh=true;
+    }
+  }
+}
+
+void syncReady() {
+  for (i : int[0, MN-1]) {
+    if (Released[i] &amp;&amp; isOnPE(i+1,pe)) {
+      Released[i]=false;
+      if (taskHasDependency(i)) {
+        WaitDep[i]=true;
+      }
+      else {
+        Enabled[i]=true;
+      }
+    }
+  }
+}</declaration><location id="id10" x="32" y="-192"><name x="22" y="-222">Synchronizing</name><committed/></location><location id="id11" x="-224" y="-40"><name x="-234" y="-70">Idle</name></location><init ref="id11"/><transition><source ref="id10"/><target ref="id11"/><label kind="guard" x="-192" y="-144">!aDependencyHasChanged()</label><label kind="synchronisation" x="-192" y="-128">//Synchronizer finishing
+synchronize[pe-1]!</label></transition><transition><source ref="id10"/><target ref="id11"/><label kind="guard" x="-192" y="-256">aDependencyHasChanged()</label><label kind="synchronisation" x="-192" y="-240">//Synchronizer finishing
+synchronize[pe-1]!</label><label kind="assignment" x="-192" y="-208">setGlobalReschedule()</label><nail x="-224" y="-192"/></transition><transition><source ref="id11"/><target ref="id10"/><label kind="synchronisation" x="40" y="-136">//Synchronizer starting
+synchronize[pe-1]?</label><label kind="assignment" x="40" y="-104">syncFinish(),
+syncReady()</label><nail x="32" y="-40"/></transition></template><template><name>Task</name><parameter>const int pe, const int tau, const int bcet, const int wcet</parameter><declaration>clock cp, x;
+int[0,wcet] cr;
+int[bcet,wcet] e=bcet;
+
+void setOrigDep(int t) {
+  for (ini : int[0,MN-1]) {
+    if ((offset[t]&gt;offset[ini])&amp;&amp;Finished[ini])
+      depend[t][ini]=false;
+    else
+      depend[t][ini]=origdep[t][ini];
+  }
+}
+</declaration><location id="id12" x="-32" y="88"><committed/></location><location id="id13" x="32" y="160"><name x="16" y="128">RunningU</name><label kind="invariant" x="24" y="176">x&lt;=1</label></location><location id="id14" x="224" y="-224"><name x="176" y="-256">Dmiss</name></location><location id="id15" x="32" y="32"><name x="8" y="0">Running</name><label kind="invariant" x="24" y="48">x&lt;1</label></location><location id="id16" x="32" y="-224"><name x="8" y="-256">Released</name><label kind="invariant" x="16" y="-208">cp&lt;pi[tau-1]</label></location><location id="id17" x="-224" y="-224"><name x="-240" y="-256">Done</name><label kind="invariant" x="-248" y="-208">cp&lt;=pi[tau-1]</label></location><location id="id18" x="-448" y="-224"><name x="-464" y="-256">Offset</name><label kind="invariant" x="-458" y="-209">cp&lt;=offset[tau-1]</label></location><init ref="id18"/><transition><source ref="id12"/><target ref="id15"/><label kind="assignment" x="-168" y="32">x=0, disc[tau-1]=0,
+taskFinishing[pe-1]=cr==e</label></transition><transition><source ref="id14"/><target ref="id14"/><nail x="264" y="-224"/><nail x="264" y="-192"/></transition><transition><source ref="id13"/><target ref="id12"/><label kind="guard" x="-120" y="128">cp==pi[tau-1]
+&amp;&amp; cr==e</label><nail x="-32" y="160"/></transition><transition><source ref="id13"/><target ref="id14"/><label kind="guard" x="152" y="-80">cp==pi[tau-1] &amp;&amp; cr&lt;e</label><label kind="assignment" x="152" y="-64">missedDeadline=1</label><nail x="224" y="160"/></transition><transition><source ref="id13"/><target ref="id12"/><label kind="guard" x="-16" y="88">x==1 &amp;&amp; 
+cp&lt;pi[tau-1]</label></transition><transition><source ref="id15"/><target ref="id13"/><label kind="guard" x="88" y="64">x&gt;0 &amp;&amp;
+cr&lt;e</label><label kind="assignment" x="88" y="96">disc[tau-1]=1,
+cr++</label><nail x="88" y="88"/></transition><transition><source ref="id16"/><target ref="id14"/><label kind="guard" x="80" y="-256">cp&gt;pi[tau-1]-1</label><label kind="assignment" x="56" y="-240">missedDeadline=1</label></transition><transition><source ref="id15"/><target ref="id16"/><label kind="guard" x="64" y="-192">cp&lt;pi[tau-1] 
+&amp;&amp; cr&lt;e &amp;&amp;
+!lockT(disc)</label><label kind="synchronisation" x="64" y="-144">preempt[pe-1]?</label><nail x="64" y="0"/><nail x="64" y="-192"/></transition><transition><source ref="id18"/><target ref="id17"/><label kind="guard" x="-408" y="-264">cp==offset[tau-1]</label><label kind="assignment" x="-408" y="-248">cp=pi[tau-1]</label></transition><transition><source ref="id15"/><target ref="id17"/><label kind="guard" x="-216" y="-128">cr==e &amp;&amp;
+!lockT(disc)</label><label kind="synchronisation" x="-216" y="-96">finish[pe-1]!</label><label kind="assignment" x="-216" y="-80">tauid[pe-1]=tau,
+taskFinishing[pe-1]=0,
+Finished[tau-1]=1</label></transition><transition><source ref="id16"/><target ref="id15"/><label kind="guard" x="-72" y="-176">cp&lt;pi[tau-1] &amp;&amp; 
+tauid[pe-1]==tau</label><label kind="synchronisation" x="-72" y="-144">run[pe-1]?</label><label kind="assignment" x="-72" y="-128">x=0</label></transition><transition><source ref="id17"/><target ref="id16"/><label kind="select" x="-192" y="-352">exe:int[bcet,wcet]</label><label kind="guard" x="-192" y="-336">cp==pi[tau-1] &amp;&amp;
+!lockPE(taskFinishing)</label><label kind="synchronisation" x="-192" y="-304">ready[pe-1]!</label><label kind="assignment" x="-192" y="-288">tauid[pe-1]=tau,
+cp=0, cr=0, e=exe,
+Finished[tau-1]=0,
+setOrigDep(tau-1)</label></transition></template><template><name>DynPri</name><declaration>clock sc; //clock for updating dynamically updated priorities
+int[0,MAXListSize-1] i=0;
+</declaration><location id="id19" x="-192" y="-224"><name x="-224" y="-264">Priorities</name><label kind="invariant" x="-224" y="-208">sc&lt;=Steps[i]</label></location><location id="id20" x="-448" y="-224"><name x="-496" y="-264">OffsetPriorities</name><label kind="invariant" x="-488" y="-208">sc&lt;=OffSteps[i]</label></location><init ref="id20"/><transition><source ref="id19"/><target ref="id19"/><label kind="guard" x="-224" y="-160">sc==Steps[i] &amp;&amp;
+(i&lt;NRSteps-1)
+&amp;&amp; !lockT(disc) &amp;&amp; 
+!lockPE(taskFinishing)</label><label kind="synchronisation" x="-224" y="-96">reschedule!</label><label kind="assignment" x="-224" y="-80">i++, pri=Prios[i]</label><nail x="-224" y="-160"/><nail x="-160" y="-160"/></transition><transition><source ref="id19"/><target ref="id19"/><label kind="guard" x="-224" y="-400">sc==Steps[i] &amp;&amp;
+!(i&lt;NRSteps-1)
+&amp;&amp; !lockT(disc) &amp;&amp; 
+!lockPE(taskFinishing)</label><label kind="synchronisation" x="-224" y="-336">reschedule!</label><label kind="assignment" x="-224" y="-320">i=0, pri=Prios[i], 
+sc=OffSteps[NROffSteps-1]</label><nail x="-224" y="-288"/><nail x="-160" y="-288"/></transition><transition><source ref="id20"/><target ref="id19"/><label kind="guard" x="-376" y="-320">sc==OffSteps[i] &amp;&amp;
+!(i&lt;NROffSteps-1)
+&amp;&amp; !lockT(disc) &amp;&amp; 
+!lockPE(taskFinishing)</label><label kind="synchronisation" x="-376" y="-256">reschedule!</label><label kind="assignment" x="-376" y="-240">i=0, pri=Prios[i]</label></transition><transition><source ref="id20"/><target ref="id20"/><label kind="guard" x="-504" y="-384">sc==OffSteps[i] &amp;&amp; 
+(i&lt;NROffSteps-1) &amp;&amp;
+!lockT(disc) &amp;&amp; 
+!lockPE(taskFinishing)</label><label kind="synchronisation" x="-504" y="-320">reschedule!</label><label kind="assignment" x="-504" y="-304">i++, pri=OffPrios[i]</label><nail x="-480" y="-288"/><nail x="-416" y="-288"/></transition></template><template><name>TaskBasic</name><parameter>const int pe, const int tau, const int bcet, const int wcet</parameter><declaration>clock cp, x;
+int cr, e;
+
+void setOrigDep(int t) {
+  for (ini : int[0,MN-1]) {
+    if ((offset[t]&gt;offset[ini])&amp;&amp;Finished[ini])
+      depend[t][ini]=false;
+    else
+      depend[t][ini]=origdep[t][ini];
+  }
+}
+</declaration><location id="id21" x="-32" y="88"><committed/></location><location id="id22" x="32" y="160"><name x="16" y="128">Discrete</name><label kind="invariant" x="24" y="176">x&lt;=1</label></location><location id="id23" x="224" y="-224"><name x="176" y="-256">MissedDeadline</name></location><location id="id24" x="32" y="32"><name x="8" y="0">Running</name><label kind="invariant" x="24" y="48">x&lt;1</label></location><location id="id25" x="32" y="-224"><name x="8" y="-256">Released</name><label kind="invariant" x="0" y="-208">cp&lt;pi[tau-1]</label></location><location id="id26" x="-224" y="-224"><name x="-240" y="-256">Done</name><label kind="invariant" x="-248" y="-208">cp&lt;=pi[tau-1]</label></location><location id="id27" x="-424" y="-224"><name x="-440" y="-256">Start</name><label kind="invariant" x="-456" y="-208">cp&lt;=offset[tau-1]</label></location><init ref="id27"/><transition><source ref="id21"/><target ref="id24"/><label kind="assignment" x="-32" y="40">x=0</label></transition><transition><source ref="id23"/><target ref="id23"/><nail x="264" y="-224"/><nail x="264" y="-192"/></transition><transition><source ref="id22"/><target ref="id21"/><label kind="guard" x="-96" y="128">cp==pi[tau-1]
+&amp;&amp; cr==e</label><nail x="-32" y="160"/></transition><transition><source ref="id22"/><target ref="id23"/><label kind="guard" x="152" y="-64">cp==pi[tau-1] &amp;&amp; cr&lt;e</label><label kind="assignment" x="152" y="-48">missedDeadline=1</label><nail x="224" y="160"/></transition><transition><source ref="id22"/><target ref="id21"/><label kind="guard" x="-8" y="96">cp&lt;pi[tau-1]
+&amp;&amp; x==1</label></transition><transition><source ref="id24"/><target ref="id22"/><label kind="guard" x="88" y="64">x&gt;0 &amp;&amp;
+cr&lt;e</label><label kind="assignment" x="88" y="96">cr++</label><nail x="88" y="88"/></transition><transition><source ref="id25"/><target ref="id23"/><label kind="guard" x="80" y="-256">cp&gt;pi[tau-1]-1</label><label kind="assignment" x="64" y="-240">missedDeadline=1</label></transition><transition><source ref="id24"/><target ref="id25"/><label kind="guard" x="64" y="-152">cp&lt;pi[tau-1]
+&amp;&amp; cr&lt;e</label><label kind="synchronisation" x="64" y="-120">preempt[pe-1]?</label><nail x="64" y="0"/><nail x="64" y="-192"/></transition><transition><source ref="id27"/><target ref="id26"/><label kind="guard" x="-384" y="-256">cp==offset[tau-1]</label><label kind="assignment" x="-384" y="-240">cp=pi[tau-1]</label></transition><transition><source ref="id24"/><target ref="id26"/><label kind="guard" x="-144" y="-112">cr==e</label><label kind="synchronisation" x="-144" y="-96">finish[pe-1]!</label></transition><transition><source ref="id25"/><target ref="id24"/><label kind="guard" x="-48" y="-160">cp&lt;pi[tau-1]</label><label kind="synchronisation" x="-48" y="-144">run[pe-1]?</label><label kind="assignment" x="-48" y="-128">x=0</label></transition><transition><source ref="id26"/><target ref="id25"/><label kind="select" x="-168" y="-288">exe:int[bcet,wcet]</label><label kind="guard" x="-168" y="-272">cp==pi[tau-1]</label><label kind="synchronisation" x="-168" y="-256">ready[pe-1]!</label><label kind="assignment" x="-168" y="-240">cp=0, cr=0, e=exe</label></transition></template><system>
+//System-Dependent Inst
+Con1 = Control(1);
+Syn1 = Synchronizer(1);
+Sch1 = Scheduler(1);
+
+Con2 = Control(2);
+Syn2 = Synchronizer(2);
+Sch2 = Scheduler(2);
+
+Con3 = Control(3);
+Syn3 = Synchronizer(3);
+Sch3 = Scheduler(3);
+
+T1 = Task(2, 1, 2, 2);
+T2 = Task(2, 2, 1, 1);
+T3 = Task(3, 3, 2, 2);
+T4 = Task(3, 4, 2, 3);
+T2_T3 = Task(1, 5, 1, 1);
+
+system T1 &lt; T2 &lt; T3 &lt; T4 &lt; T2_T3 &lt; Con1 &lt; Syn1 &lt; Sch1 &lt; Con2 &lt; Syn2 &lt; Sch2 &lt; Con3 &lt; Syn3 &lt; Sch3 &lt; DynPri;
+//System-Independent Inst
+</system></nta>
