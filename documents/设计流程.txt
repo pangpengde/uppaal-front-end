@@ -14,3 +14,25 @@ operation（）方法，具体的实现就是把load方法得到的modle对象�
 output（path）方法，把modle对象再写回文件
 第三层，就是界面了，这是真正的业务流程都有了，无论你是使用wxpython还是qt什么的图形库，下层都是不知道的，这层只是负责界面展示而已
 
+小胖新指示：
+1根据template.xml来设计数据结构，不需要一步到位，其实就是把这个xml中的各个字段解析出来变成model类。
+你现在model这个类在解析template后会读到一些值 然后用户输入了之后就会被用户输入的值覆盖了是不。
+解析这个xml变成model类，可以根据情况再修改你的model类
+你有一个界面类GUI 提供一个方法 getUserInput()
+你还有个DataInput类 提供一个方法input(path)
+你假设你有一个类DataInput，他会给你读取template.xml
+GUI ： public UserInput getUserInput()
+DataInput ： public Template input(path)
+UserInput+Template = Model
+再来个DataOuput : public output(path , Model)生成model.xml
+
+2下一步设计流程
+每个流程由什么类负责
+这个类提供什么方法来做什么事情
+具体怎么实现你无所谓
+
+定好类，每个类就是分成模块实现
+
+按照流程定义好类，想好类中的方法是做什么的，给出类名，方法名
+
+假如说你有一个类叫File，这个类负责和文件打交道，那这个类要提供什么功能呢，读取 写，这些就是方法
