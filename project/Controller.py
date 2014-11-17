@@ -1,24 +1,16 @@
 # coding : utf-8
 
-class Controller(object):
+import os
 
-    persistence = None
-    data = None
+class Controller(object):
 
     """docstring for Controller"""
     def __init__(self):
        self.persistence = XmlDataPersistence() 
        
     @classmethod
-    def load(path):
-        data = self.persistence.input(path)
-
-    @classmethod
-    def operation():
-        if data == None:
-            return
-        # TODO
-
-    @classmethod
-    def output(path):
-        self.persistence.output(self.data, path)
+    def modelValidate(path):
+        #调用uppaal，验证model.xml,生成结果文件result.trace放在path路径下
+        cmd = ''
+        os.system(cmd)
+        pass
