@@ -1,0 +1,60 @@
+-------------------用户需求-------------------------------------------------------
+用户目的：
+验证某一系统的可调度性
+
+问题：
+如果自己使用某个模型检测工具，需要自己学习使用模型检测工具，需要自己抽象可调度性问题
+
+解决方法：
+用户输入对系统的描述：
+Application: Task(name), and its running period(number), offset(number)
+Dependency: dependency between tasks()
+Platform: processing elements and its schedule strategy, bus and its strategy(name)
+Mapping: which task run on which processing element(name)
+Characteristic: best case execute time(number) and worst case execute time(number) of each mapping
+Property: Schedule?
+用户选择验证功能
+用户得到：
+可调度性分析的结果：可调度 or 不可调度，显示一个不可调度的反例
+
+-------------------设计流程-------------------------------------------------------
+
+----------Class Design----------------------------------------
+class MainFrame #界面类，包含要展示的元素,包括输入部分、功能控制部分、结果展示部分
+
+method:
+self.show() #显示界面
+showResult(Result result) #显示结果部分的界面
+------------------------------------
+class UserInput #获取用户的输入信息
+
+method:
+getTask() #
+get
+------------------------------------
+class Template #处理模板文件,识别一些标签
+
+
+method:
+readTemplate(path) #读template.xml文件
+
+------------------------------------
+class Model #处理模型文件
+
+method:
+model(UserInput uData,Template template) #生成model,把输入数据和模板结合起来
+path modelGen(Model model) #生成model.xml
+
+------------------------------------
+class Result #结果分析
+
+method:
+
+
+------------------------------------
+class Controller #控制功能
+
+method：
+path modelValidate(path) #调用uppaal，验证model.xml,生成结果文件result.trace
+
+
