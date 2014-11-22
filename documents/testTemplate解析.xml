@@ -1,40 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_1.dtd'>
-
 <nta>
-
 	<declaration>const int FP=0, RM=1, EDF=2;
 
-
-
 //System-Dependent Decl
-const int M = 3;
-const int N = 2;
-const int MN = 5;
+const int M = ; // the number of processors 处理单元个数，包括processor和bus
+const int N = ; // the maximum nuber of tasks per processor
+//处理器最大处理的任务数，通过统计mapping里processor对应的任务数，取最大值
+const int MN = ; //the total number of tasks 总任务数，包括task声明的个数，以及传输的data大小大于0的dependency(dependency排后面)
 
-const int[FP,EDF] processorScheduling[M] = {FP, RM, RM};
-const int[0,MN] onPE[M][N] = {{5, 0},{1, 2},{3, 4}};
-const int fpris[MN] = {1, 2, 3, 4, 5};
-const int pi[MN] = {4, 6, 6, 6, 6};
-const int offset[MN] = {0, 0, 0, 40, 0};
+const int[FP,EDF] processorScheduling[M] = {}; //constains information about the scheduling priciple for each processor 顺序是Bus，Proc1，Proc2……
+const int[0,MN] onPE[M][N] = {}; //global taskids from locals各处理单元需要处理的任务编号，每个处理器的数组长度都一样是N(最大任务数)
+const int fpris[MN] = {}; //FP scheduling priorities任务调度的优先级，貌似都是按照任务声明顺序，没有特殊说明
+const int pi[MN] = {}; //RM scheduling priorities各任务的周期
+const int offset[MN] = {}; //global offset information各任务的offset
 
-const bool origdep[MN][MN] = {{0, 0, 0, 0, 0},{0, 0, 0, 0, 0},{0, 0, 0, 0, 1},{0, 0, 0, 0, 0},{0, 1, 0, 0, 0}};
+//array for original dependencies, 1 for dependency , 0 for no dependency - {{0,1},{0,0}} means that 1 is dependant on 2
+const bool origdep[MN][MN] = {}; 
 
-bool depend[MN][MN] = {{0, 0, 0, 0, 0},{0, 0, 0, 0, 0},{0, 0, 0, 0, 1},{0, 0, 0, 0, 0},{0, 1, 0, 0, 0}};
+//dynamically updated array for current dependencies
+bool depend[MN][MN] = {};
 
-int[1,MN] pri[MN] = {1,2,3,5,4}; //EDF scheduling priorities
+int[1,MN] pri[MN] = {}; //EDF scheduling priorities
 
-const int NRSteps=5, NROffSteps=13, MAXOffStep=40, MAXStep=52, MAXListSize=13;
+//dynamically updated priorities
+const int NRSteps=, NROffSteps=, MAXOffStep=, MAXStep=, MAXListSize=;
 
-const int[0,MAXOffStep] OffSteps[NROffSteps] = {4,6,8,12,16,18,20,24,28,30,32,36,40};
-const int[1,MN] OffPrios[NROffSteps][MN] = {{1,2,3,5,4},{4,1,2,5,3},{1,2,3,5,4},{1,2,3,5,4},{1,2,3,5,4},{4,1,2,5,3},{1,2,3,5,4},{1,2,3,5,4},{1,2,3,5,4},{4,1,2,5,3},{1,2,3,5,4},{1,2,3,5,4},{1,2,3,5,4}};
+const int[0,MAXOffStep] OffSteps[NROffSteps] = {};
+const int[1,MN] OffPrios[NROffSteps][MN] = {};
 
-const int[0,MAXStep] Steps[NRSteps] = {42,44,46,48,52};
-const int[1,MN] Prios[NRSteps][MN] = {{4,1,2,5,3},{1,3,4,2,5},{2,3,4,1,5},{1,2,3,5,4},{1,3,4,2,5}};
+const int[0,MAXStep] Steps[NRSteps] = {};
+const int[1,MN] Prios[NRSteps][MN] = {};
 
-const int MaxExe=3;
-const int MaxPi=6;
+const int MaxExe=;
+const int MaxPi=;
 
 //System-Independent Decl
 //meta int TM = 0;
@@ -743,25 +742,7 @@ pri=Prios[i]</label>
 	</template>
 	<system>
 //System-Dependent Inst
-Con1 = Control(1);
-Syn1 = Synchronizer(1);
-Sch1 = Scheduler(1);
 
-Con2 = Control(2);
-Syn2 = Synchronizer(2);
-Sch2 = Scheduler(2);
-
-Con3 = Control(3);
-Syn3 = Synchronizer(3);
-Sch3 = Scheduler(3);
-
-T1 = Task(2, 1, 2, 2);
-T2 = Task(2, 2, 1, 1);
-T3 = Task(3, 3, 2, 2);
-T4 = Task(3, 4, 2, 3);
-T2_T3 = Task(1, 5, 1, 1);
-
-system T1 , T2 , T3 , T4 , T2_T3 , Con1 , Syn1 , Sch1 , Con2 , Syn2 , Sch2 , Con3 , Syn3 , Sch3 , DynPri;
 //System-Independent Inst
 </system>
 </nta>
