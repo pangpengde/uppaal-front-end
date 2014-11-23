@@ -11,6 +11,6 @@ class Platform(object):
 
 class Bus(Platform):
     speed = None
-    
+
     def __init__(self):
         pass
