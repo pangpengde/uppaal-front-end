@@ -15,10 +15,10 @@ const int fpris[MN] = {}; //FP scheduling priorities任务调度的优先级，�
 const int pi[MN] = {}; //RM scheduling priorities各任务的周期
 const int offset[MN] = {}; //global offset information各任务的offset
 
-//array for original dependencies, 1 for dependency , 0 for no dependency - {{0,1},{0,0}} means that 1 is dependant on 2
+//依赖矩阵array for original dependencies, 1 for dependency , 0 for no dependency - {{0,1},{0,0}} means that 1 is dependant on 2
 const bool origdep[MN][MN] = {}; 
 
-//dynamically updated array for current dependencies
+//动态依赖矩阵dynamically updated array for current dependencies
 bool depend[MN][MN] = {};
 
 int[1,MN] pri[MN] = {}; //EDF scheduling priorities
@@ -33,7 +33,7 @@ const int[0,MAXStep] Steps[NRSteps] = {};
 const int[1,MN] Prios[NRSteps][MN] = {};
 
 const int MaxExe=;
-const int MaxPi=;
+const int MaxPi=; //最长任务周期
 
 //System-Independent Decl
 //meta int TM = 0;
@@ -742,7 +742,25 @@ pri=Prios[i]</label>
 	</template>
 	<system>
 //System-Dependent Inst
+//对每一个处理器声明,一共M组
+//Control(pe)
+//Synchronizer(pe)
+//Scheduler(pe)
+//形如
+//Con1 = Control(1);
+//Syn1 = Synchronizer(1);
+//Sch1 = Scheduler(1);
 
+//对每一个任务声明，一共MN组,pe为处理器，tau为任务编号
+//Task(pe,tau,bcet,wcet)
+//形如,注意最后一个是依赖
+//T1 = Task(2, 1, 2, 2);
+//T2 = Task(2, 2, 1, 1);
+//T3 = Task(3, 3, 2, 2);
+//T4 = Task(3, 4, 2, 3);
+//T2_T3 = Task(1, 5, 1, 1);
+ 
+system Task3, Task2, Task1, Con1, Syn1, Sch1, DynPri;
 //System-Independent Inst
 </system>
 </nta>
