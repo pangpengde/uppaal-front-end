@@ -17,7 +17,7 @@ class TemplateAnalyse:
         tp.nta = et.parse(path)
 
 
-        return template
+        return tp
 
 
 if __name__ == '__main__':
