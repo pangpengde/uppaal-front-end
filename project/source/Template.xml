@@ -1,0 +1,43 @@
+<nta>
+<declaration>
+const int FP=0, RM=1, EDF=2;
+
+//System-Dependent Decl
+const int M = ; // the number of processors 处理单元个数，包括processor和bus
+const int N = ; // the maximum nuber of tasks per processor
+//处理器最大处理的任务数，通过统计mapping里processor对应的任务数，取最大值
+const int MN = ; //the total number of tasks 总任务数，包括task声明的个数，以及传输的data大小大于0的dependency(dependency排后面)
+
+const int[FP,EDF] processorScheduling[M] = {}; //constains information about the scheduling priciple for each processor 顺序是Bus，Proc1，Proc2……
+const int[0,MN] onPE[M][N] = {}; //global taskids from locals各处理单元需要处理的任务编号，每个处理器的数组长度都一样是N(最大任务数)
+const int fpris[MN] = {}; //FP scheduling priorities任务调度的优先级，貌似都是按照任务声明顺序，没有特殊说明
+const int pi[MN] = {}; //RM scheduling priorities各任务的周期
+const int offset[MN] = {}; //global offset information各任务的offset
+
+//array for original dependencies, 1 for dependency , 0 for no dependency - {{0,1},{0,0}} means that 1 is dependant on 2
+const bool origdep[MN][MN] = {}; 
+
+//dynamically updated array for current dependencies
+bool depend[MN][MN] = {};
+
+int[1,MN] pri[MN] = {}; //EDF scheduling priorities
+
+//dynamically updated priorities
+const int NRSteps=, NROffSteps=, MAXOffStep=, MAXStep=, MAXListSize=;
+
+const int[0,MAXOffStep] OffSteps[NROffSteps] = {};
+const int[1,MN] OffPrios[NROffSteps][MN] = {};
+
+const int[0,MAXStep] Steps[NRSteps] = {};
+const int[1,MN] Prios[NRSteps][MN] = {};
+
+const int MaxExe=;
+const int MaxPi=;
+</declaration>
+
+<system>
+//System-Dependent Inst
+
+
+</system>
+</nta>
