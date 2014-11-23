@@ -11,7 +11,7 @@ class TemplateAnalyse:
         pass
 
     @classmethod
-    def readTemplate(path):
+    def readTemplate(self, path):
         # 将指定路径的template.xml解析出来
         tp = Template()
         tp.nta = et.parse(path)
@@ -22,4 +22,4 @@ class TemplateAnalyse:
 
 if __name__ == '__main__':
     analyse = TemplateAnalyse()
-    tp = analyse.readTemplate(r'../sourcer/Template.xml')
+    tp = analyse.readTemplate(r'..\\source\\Template.xml')
