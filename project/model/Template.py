@@ -8,11 +8,11 @@ class Template:
     RM = 1
     EDF = 2
     #处理单元个数，包括processor和bus
-    M = 0
+    M = None
     #每个处理器最大处理的任务数，通过统计mapping里processor对应的任务数，取最大值
-    N = 0
+    N = None
     # 总任务数，包括task声明的个数，以及传输的data大小大于0的dependency
-    MN = 0
+    MN = None
 
     #处理器的调度策略数组，顺序是Bus，Proc1，Proc2……可能的值是FP,RM,EDF
     processorScheduling = {}
@@ -33,10 +33,10 @@ class Template:
     #EDF最短截止时间 调度策略下的优先级顺序，可能的值为任务编号1-mn？
     pri = {}
     #动态改变优先级
-    NRSteps = 0
-    NROffSteps = 0
-    MAXOffStep = 0
-    MAXListSize = 0
+    NRSteps = None
+    NROffSteps = None
+    MAXOffStep = None
+    MAXListSize = None
     #长度为NROffSteps的数组，值为0-MAXOffStep
     OffSteps = {}
     #NROffSteps*MN的矩阵，值为1-mn
@@ -47,9 +47,9 @@ class Template:
     Prios = {}
 
     #最长周期任务的周期
-    MaxPi = 0
+    MaxPi = None
     #最大执行时间？
-    MaxExe = 0
+    MaxExe = None
 
     #System系统描述
     #处理器部分前面已经全部定义了
