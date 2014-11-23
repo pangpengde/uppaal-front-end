@@ -2,7 +2,7 @@
 
 from xml.etree import ElementTree as et
 
-from model import Template
+from model.Template import Template
 
 
 class TemplateAnalyse:
