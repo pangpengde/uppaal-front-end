@@ -1,18 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_1.dtd'>
 <nta>
-<declaration>
-const int FP=0, RM=1, EDF=2;
+	<declaration>const int FP=0, RM=1, EDF=2;
 
 //System-Dependent Decl
-const int M = ; // the number of processors 处理单元个数，包括processor和bus
+const int M = ; // the number of processors 
 const int N = ; // the maximum nuber of tasks per processor
-//处理器最大处理的任务数，通过统计mapping里processor对应的任务数，取最大值
-const int MN = ; //the total number of tasks 总任务数，包括task声明的个数，以及传输的data大小大于0的dependency(dependency排后面)
+const int MN = ; //the total number of tasks
 
-const int[FP,EDF] processorScheduling[M] = {}; //constains information about the scheduling priciple for each processor 顺序是Bus，Proc1，Proc2……
-const int[0,MN] onPE[M][N] = {}; //global taskids from locals各处理单元需要处理的任务编号，每个处理器的数组长度都一样是N(最大任务数)
-const int fpris[MN] = {}; //FP scheduling priorities任务调度的优先级，貌似都是按照任务声明顺序，没有特殊说明
-const int pi[MN] = {}; //RM scheduling priorities各任务的周期
-const int offset[MN] = {}; //global offset information各任务的offset
+const int[FP,EDF] processorScheduling[M] = {}; //constains information about the scheduling priciple for each processor
+const int[0,MN] onPE[M][N] = {}; //global taskids from locals
+const int fpris[MN] = {}; //FP scheduling priorities
+const int pi[MN] = {}; //RM scheduling priorities
+const int offset[MN] = {}; //global offset information
 
 //array for original dependencies, 1 for dependency , 0 for no dependency - {{0,1},{0,0}} means that 1 is dependant on 2
 const bool origdep[MN][MN] = {}; 
@@ -33,11 +33,715 @@ const int[1,MN] Prios[NRSteps][MN] = {};
 
 const int MaxExe=;
 const int MaxPi=;
-</declaration>
 
-<system>
+//System-Independent Decl
+//meta int TM = 0;
+int[0,MAXStep] TM;
+int[0,MAXStep] cfin[M];
+bool cfinNextPer[M];
+bool cfinValid[M];
+bool missedDeadline;
+
+broadcast chan synch, finish, dmissed, prc;
+chan run[MN], preempt[M];
+//bool released[MN];
+int[0,MAXStep] dead[MN];
+bool deadNextPer[MN];
+int[0,MAXStep] st[M];
+int[0,MN] executing[M];
+bool lock[MN], lockp[M];
+
+bool Released[MN]; //array of tasks which have issued ready signals
+bool Enabled[MN]; //array of tasks which are not awaiting dependencies to be resolved
+bool WaitDep[MN]; //array for tasks which are awaiting dependencies to be resolved
+bool rescheduleNeeded; //indicator for the need for a global reschedule
+bool Finished[MN];
+
+void setOrigDep(int t) {
+  for (ini : int[0,MN-1]) {
+    if ((offset[t]&gt;offset[ini])&amp;&amp;Finished[ini])
+      depend[t][ini]=false;
+    else
+      depend[t][ini]=origdep[t][ini];
+  }
+}
+
+//function updating dependencies when task t has finished
+void opdDep(int t) {
+  for (ini : int[0,MN-1]) {
+    depend[ini][t]=false;
+  }
+}
+
+//function checking if task t is on processing element p
+bool isOnPE(int t, int p){
+  for(i:int[0,N-1]){
+    if(onPE[p-1][i]==t) return true;
+  }
+  return false;
+}
+
+bool anyT(bool array[MN])
+{
+  for(i:int[0,MN-1])
+  {
+    if(array[i]) 
+    {
+      return 1;
+    }
+  }
+  return 0;
+}
+
+bool anyP(bool array[M])
+{
+  for(i:int[0,M-1])
+  {
+    if(array[i]) 
+    {
+      return 1;
+    }
+  }
+  return 0;
+}
+
+int minCfin(int stp)
+{
+  bool vld;
+  int[0,MAXStep*2] ret;// = cfin[0]+(cfinNextPer[0]*MAXStep);
+  for(i:int[0,M-1])
+  {
+    if(!vld &amp;&amp; cfinValid[i])
+    {
+      ret=cfin[i]+(cfinNextPer[i]*MAXStep);
+      vld=1;
+    }
+    if(cfin[i]+(cfinNextPer[i]*MAXStep)&lt;ret &amp;&amp; cfinValid[i])
+    {
+      ret=cfin[i]+(cfinNextPer[i]*MAXStep);
+    }
+  }
+  if(!vld)
+  {
+    return stp+1;
+  }
+  else
+  {
+    return ret;
+  }
+}    
+
+
+int nextEventTime(int nextStep)
+{
+  int[0,MAXStep] res = nextStep;
+  for(i:int[0,M-1])
+  {
+    if(cfin[i]&lt;res &amp;&amp; cfinValid[i] &amp;&amp; !cfinNextPer[i])
+    {
+      res=cfin[i];
+    }
+  }
+  return res;
+}
+
+bool dmissCheck(int timep)
+{
+  for(i:int[0,MN-1])
+  {
+    if(dead[i]&lt;timep)
+    {
+      return 1;
+    }
+  }
+  return 0;
+}
+</declaration>
+	<template>
+		<name x="5" y="5">Task</name>
+		<parameter>const int p_id, const int t_id, const int bcet, const int wcet</parameter>
+		<declaration>// Place local declarations here.
+int[0,MaxExe] rem;
+bool oActive;
+
+void handleReady(){
+  Finished[t_id-1]=0;
+  Released[t_id-1]=1;
+  setOrigDep(t_id-1);
+}
+
+void handleFinish(){
+  Finished[t_id-1]=1;
+  opdDep(t_id-1);
+  Enabled[t_id-1]=0;
+}
+</declaration>
+		<location id="id0" x="136" y="-520">
+			<name x="126" y="-550">Opoll</name>
+		</location>
+		<location id="id1" x="8" y="-520">
+			<name x="-2" y="-550">Offset</name>
+		</location>
+		<location id="id2" x="-216" y="-520">
+			<name x="-226" y="-550">Start</name>
+			<committed/>
+		</location>
+		<location id="id3" x="-448" y="-344">
+			<name x="-458" y="-374">Dpoll</name>
+			<urgent/>
+		</location>
+		<location id="id4" x="32" y="-344">
+			<name x="22" y="-374">Dmiss</name>
+		</location>
+		<location id="id5" x="-216" y="-136">
+			<name x="-226" y="-166">Running</name>
+		</location>
+		<location id="id6" x="-216" y="-344">
+			<name x="-226" y="-374">Released</name>
+		</location>
+		<location id="id7" x="-448" y="-280">
+			<name x="-458" y="-310">Done</name>
+		</location>
+		<init ref="id2"/>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="guard" x="16" y="-584">TM&lt;offset[t_id-1]</label>
+			<label kind="assignment" x="24" y="-568">lock[t_id-1]=0</label>
+			<nail x="64" y="-552"/>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id0"/>
+			<label kind="synchronisation" x="40" y="-536">synch?</label>
+			<label kind="assignment" x="24" y="-520">lock[t_id-1]=1</label>
+		</transition>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id6"/>
+			<label kind="select" x="48" y="-504">e:int[bcet,wcet]</label>
+			<label kind="guard" x="48" y="-488">TM==offset[t_id-1]</label>
+			<label kind="assignment" x="48" y="-472">oActive=0,
+dead[t_id-1]=TM+pi[t_id-1],
+rem=e,
+handleReady(),
+lock[t_id-1]=0</label>
+		</transition>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id1"/>
+			<label kind="guard" x="-168" y="-552">offset[t_id-1]&gt;0</label>
+			<label kind="assignment" x="-168" y="-536">oActive=1</label>
+		</transition>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id6"/>
+			<label kind="select" x="-216" y="-504">e:int[bcet,wcet]</label>
+			<label kind="guard" x="-216" y="-488">offset[t_id-1]==0</label>
+			<label kind="assignment" x="-216" y="-472">dead[t_id-1]=TM+pi[t_id-1],
+rem=e,
+handleReady()</label>
+		</transition>
+		<transition>
+			<source ref="id6"/>
+			<target ref="id4"/>
+			<label kind="guard" x="-152" y="-392">TM&gt;=dead[t_id-1]+deadNextPer[t_id-1]*(MAXStep-MAXOffStep)</label>
+			<label kind="synchronisation" x="-152" y="-376">dmissed?</label>
+			<label kind="assignment" x="-152" y="-360">missedDeadline=1</label>
+		</transition>
+		<transition>
+			<source ref="id3"/>
+			<target ref="id7"/>
+			<label kind="guard" x="-712" y="-344">(TM - offset[t_id-1]) % pi[t_id-1]!= 0</label>
+			<label kind="assignment" x="-592" y="-328">lock[t_id-1]=0</label>
+			<nail x="-488" y="-320"/>
+		</transition>
+		<transition>
+			<source ref="id7"/>
+			<target ref="id3"/>
+			<label kind="synchronisation" x="-416" y="-328">synch?</label>
+			<label kind="assignment" x="-416" y="-312">lock[t_id-1]=1</label>
+		</transition>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id4"/>
+			<label kind="guard" x="-144" y="-136">dead[t_id-1]+(MAXStep-MAXOffStep)*deadNextPer[t_id-1] &lt;
+cfin[p_id-1]+(MAXStep-MAXOffStep)*cfinNextPer[p_id-1]</label>
+			<label kind="synchronisation" x="-144" y="-104">dmissed?</label>
+			<label kind="assignment" x="-144" y="-88">missedDeadline=1</label>
+			<nail x="32" y="-136"/>
+		</transition>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id6"/>
+			<label kind="guard" x="-160" y="-248">TM&lt;dead[t_id-1]+deadNextPer[t_id-1]*(MAXStep-MAXOffStep)</label>
+			<label kind="synchronisation" x="-160" y="-264">preempt[p_id-1]?</label>
+			<label kind="assignment" x="-160" y="-232">rem=rem-(TM-st[p_id-1]),
+cfin[p_id-1]=0,
+cfinValid[p_id-1]=0</label>
+			<nail x="-160" y="-248"/>
+		</transition>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id7"/>
+			<label kind="guard" x="-664" y="-248">TM&lt;=deadNextPer[t_id-1]*(MAXStep-MAXOffStep)+dead[t_id-1] 
+&amp;&amp; TM==cfinNextPer[p_id-1]*(MAXStep-MAXOffStep)+cfin[p_id-1]</label>
+			<label kind="synchronisation" x="-416" y="-216">finish?</label>
+			<label kind="assignment" x="-416" y="-200">cfin[p_id-1]=0,
+executing[p_id-1]=0,
+cfinValid[p_id-1]=0,
+handleFinish()</label>
+		</transition>
+		<transition>
+			<source ref="id6"/>
+			<target ref="id5"/>
+			<label kind="synchronisation" x="-328" y="-328">run[t_id-1]?</label>
+			<label kind="assignment" x="-328" y="-312">st[p_id-1]=TM,
+cfin[p_id-1]=TM+rem&gt;MAXStep?TM+rem-MAXStep+MAXOffStep:TM+rem,
+cfinNextPer[p_id-1]=TM+rem&gt;MAXStep?1:0,
+cfinValid[p_id-1]=1</label>
+		</transition>
+		<transition>
+			<source ref="id3"/>
+			<target ref="id6"/>
+			<label kind="select" x="-440" y="-472">e:int[bcet,wcet]</label>
+			<label kind="guard" x="-440" y="-456">(TM-offset[t_id-1]) % pi[t_id-1]==0</label>
+			<label kind="assignment" x="-808" y="-520">dead[t_id-1]=TM+pi[t_id-1]&gt;MAXStep?TM+pi[t_id-1]-MAXStep+MAXOffStep:TM+pi[t_id-1],
+deadNextPer[t_id-1]=TM+pi[t_id-1]&gt;MAXStep?1:0,
+rem=e,
+handleReady(),
+lock[t_id-1]=0</label>
+		</transition>
+	</template>
+	<template>
+		<name>Control</name>
+		<parameter>const int p_id</parameter>
+		<declaration>int[0,MN] c;
+int choose()
+{
+  int[0,MN] cand=0;
+  int[0,MN] lpri;
+  int[0,MaxPi] rmlpri;
+  for(i:int[0,MN-1])
+  {
+    if(Enabled[i] &amp;&amp; isOnPE(i+1,p_id))
+    {
+      if(cand==0)
+      {
+	if(processorScheduling[p_id-1]==EDF)
+        {
+          lpri=pri[i];
+        }
+	if(processorScheduling[p_id-1]==RM)
+        {
+          rmlpri=pi[i];
+        }
+	if(processorScheduling[p_id-1]==FP)
+        {
+          lpri=fpris[i];
+        }
+        cand=i+1;
+      }
+      else
+      {
+	if(processorScheduling[p_id-1]==EDF)
+        {        
+          if(pri[i]&lt;lpri)
+          {
+            lpri=pri[i];
+            cand=i+1;
+          }
+        }
+	if(processorScheduling[p_id-1]==RM)
+        {        
+          if(pi[i]&lt;rmlpri)
+          {
+            rmlpri=pi[i];
+            cand=i+1;
+          }
+        }
+	if(processorScheduling[p_id-1]==FP)
+        {        
+          if(fpris[i]&lt;lpri)
+          {
+            lpri=fpris[i];
+            cand=i+1;
+          }
+        }
+      }
+    }
+  }
+  return cand;
+}
+
+</declaration>
+		<location id="id8" x="-904" y="-232">
+			<name x="-914" y="-262">Pre</name>
+			<urgent/>
+		</location>
+		<location id="id9" x="-904" y="-336">
+			<name x="-914" y="-366">Sch</name>
+			<urgent/>
+		</location>
+		<location id="id10" x="-1144" y="-336">
+			<name x="-1154" y="-366">Spoll</name>
+			<urgent/>
+		</location>
+		<location id="id11" x="-1264" y="-336">
+			<name x="-1274" y="-366">Start</name>
+		</location>
+		<init ref="id11"/>
+		<transition>
+			<source ref="id8"/>
+			<target ref="id11"/>
+			<label kind="synchronisation" x="-1176" y="-232">run[c-1]!</label>
+			<label kind="assignment" x="-1176" y="-216">executing[p_id-1]=c,
+lockp[p_id-1]=0</label>
+			<nail x="-1264" y="-232"/>
+		</transition>
+		<transition>
+			<source ref="id9"/>
+			<target ref="id11"/>
+			<label kind="guard" x="-1184" y="-464">executing[p_id-1]==0</label>
+			<label kind="synchronisation" x="-1160" y="-448">run[c-1]!</label>
+			<label kind="assignment" x="-1176" y="-432">executing[p_id-1]=c,
+lockp[p_id-1]=0</label>
+			<nail x="-904" y="-392"/>
+			<nail x="-1264" y="-392"/>
+		</transition>
+		<transition>
+			<source ref="id9"/>
+			<target ref="id8"/>
+			<label kind="guard" x="-944" y="-312">executing[p_id-1]&gt;0</label>
+			<label kind="synchronisation" x="-944" y="-296">preempt[p_id-1]!</label>
+		</transition>
+		<transition>
+			<source ref="id10"/>
+			<target ref="id9"/>
+			<label kind="guard" x="-1120" y="-352">c!=executing[p_id-1] &amp;&amp; c&gt;0</label>
+		</transition>
+		<transition>
+			<source ref="id10"/>
+			<target ref="id11"/>
+			<label kind="guard" x="-1248" y="-280">c==executing[p_id-1] || c==0</label>
+			<label kind="assignment" x="-1248" y="-264">lockp[p_id-1]=0</label>
+			<nail x="-1144" y="-280"/>
+			<nail x="-1248" y="-280"/>
+		</transition>
+		<transition>
+			<source ref="id11"/>
+			<target ref="id10"/>
+			<label kind="synchronisation" x="-1248" y="-384">prc?</label>
+			<label kind="assignment" x="-1248" y="-368">c = choose(),
+lockp[p_id-1]=1</label>
+		</transition>
+	</template>
+	<template>
+		<name>DynPri</name>
+		<declaration>int[-1,MAXListSize] i = 0;
+
+void newHyper()
+{
+  TM = OffSteps[NROffSteps-1];
+  for(i:int[0,MN-1])
+  {
+    if(deadNextPer[i])
+    {
+      deadNextPer[i]=0;
+//      dead[i]=dead[i]-(MAXStep-MAXOffStep);
+    }
+  }
+  for(i:int[0,M-1])
+  {
+    if(cfinNextPer[i])
+    {
+      cfinNextPer[i]=0;
+      st[i]=st[i]-MAXStep+MAXOffStep;
+    }
+  }
+
+}
+
+//function checking for dependencies for task t
+bool taskHasDependency(int t) {
+  for (ini : int[0,MN-1]) {    
+    if (depend[t][ini]) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void syncReleased() {
+  for (i : int[0, MN-1]) {
+    if (Released[i]) {
+      Released[i]=false;
+      if (taskHasDependency(i)) {
+        WaitDep[i]=true;
+      }
+      else {
+        Enabled[i]=true;
+      }
+    }
+  }
+}
+
+void syncFinish() {
+  for (i : int[0,MN-1]) {
+    if (WaitDep[i] &amp;&amp; !taskHasDependency(i)) {
+      Enabled[i]=true;
+      WaitDep[i]=false; 
+      rescheduleNeeded=true;
+    }
+  }
+}</declaration>
+		<location id="id12" x="16" y="-144">
+			<urgent/>
+		</location>
+		<location id="id13" x="-80" y="-304">
+			<urgent/>
+		</location>
+		<location id="id14" x="-432" y="-144">
+			<name x="-442" y="-174">Start</name>
+			<urgent/>
+		</location>
+		<location id="id15" x="-608" y="-56">
+			<name x="-618" y="-86">ODcheck</name>
+			<urgent/>
+		</location>
+		<location id="id16" x="-608" y="-144">
+			<name x="-618" y="-174">ODone</name>
+			<urgent/>
+		</location>
+		<location id="id17" x="-992" y="-144">
+			<name x="-1002" y="-174">OSch</name>
+			<urgent/>
+		</location>
+		<location id="id18" x="-608" y="-360">
+			<name x="-618" y="-390">OFin</name>
+			<urgent/>
+		</location>
+		<location id="id19" x="-992" y="-360">
+			<name x="-1002" y="-390">ORea</name>
+			<urgent/>
+		</location>
+		<location id="id20" x="136" y="-144">
+			<name x="126" y="-174">Sch</name>
+			<urgent/>
+		</location>
+		<location id="id21" x="136" y="-304">
+			<name x="126" y="-334">Rea</name>
+			<urgent/>
+		</location>
+		<location id="id22" x="-272" y="-304">
+			<name x="-282" y="-334">Fin</name>
+			<urgent/>
+		</location>
+		<location id="id23" x="136" y="-80">
+			<name x="126" y="-110">Dcheck</name>
+			<urgent/>
+		</location>
+		<location id="id24" x="-272" y="-144">
+			<name x="-282" y="-174">Done</name>
+			<urgent/>
+		</location>
+		<init ref="id14"/>
+		<transition>
+			<source ref="id12"/>
+			<target ref="id20"/>
+			<label kind="guard" x="16" y="-304">i==NRSteps-1</label>
+			<label kind="synchronisation" x="16" y="-288">synch!</label>
+			<label kind="assignment" x="16" y="-272">TM=Steps[i],
+pri=Prios[0]</label>
+			<nail x="16" y="-224"/>
+			<nail x="120" y="-224"/>
+		</transition>
+		<transition>
+			<source ref="id24"/>
+			<target ref="id12"/>
+			<label kind="guard" x="-264" y="-216">nextEventTime(Steps[i])==Steps[i] &amp;&amp; 
+(!anyP(cfinValid)||Steps[i]&lt;minCfin(Steps[i]))
+&amp;&amp; !anyP(lockp)</label>
+		</transition>
+		<transition>
+			<source ref="id13"/>
+			<target ref="id21"/>
+			<label kind="guard" x="-48" y="-400">i&lt;NRSteps-1</label>
+			<label kind="assignment" x="-48" y="-384">i++,
+pri=Prios[i]</label>
+			<nail x="-80" y="-344"/>
+			<nail x="120" y="-344"/>
+		</transition>
+		<transition>
+			<source ref="id13"/>
+			<target ref="id21"/>
+			<label kind="guard" x="-48" y="-336">i==NRSteps-1</label>
+			<label kind="assignment" x="-48" y="-320">pri=Prios[0]</label>
+		</transition>
+		<transition>
+			<source ref="id19"/>
+			<target ref="id17"/>
+			<label kind="guard" x="-1152" y="-312">i==NROffSteps-1</label>
+			<label kind="synchronisation" x="-1152" y="-296">synch!</label>
+			<label kind="assignment" x="-1152" y="-280">pri=Prios[0]</label>
+			<nail x="-1072" y="-360"/>
+			<nail x="-1072" y="-144"/>
+		</transition>
+		<transition>
+			<source ref="id14"/>
+			<target ref="id16"/>
+			<label kind="guard" x="-560" y="-208">!anyT(lock)</label>
+			<label kind="synchronisation" x="-560" y="-192">prc!</label>
+			<label kind="assignment" x="-560" y="-176">syncReleased(),
+i=-1</label>
+		</transition>
+		<transition>
+			<source ref="id15"/>
+			<target ref="id16"/>
+			<label kind="guard" x="-600" y="-136">i&lt;NROffSteps-1
+&amp;&amp; !anyP(lockp)</label>
+			<label kind="synchronisation" x="-600" y="-104">dmissed!</label>
+		</transition>
+		<transition>
+			<source ref="id18"/>
+			<target ref="id19"/>
+			<label kind="guard" x="-808" y="-464">TM!=OffSteps[i+1]</label>
+			<label kind="synchronisation" x="-808" y="-448">finish!</label>
+			<nail x="-608" y="-432"/>
+			<nail x="-992" y="-432"/>
+		</transition>
+		<transition>
+			<source ref="id22"/>
+			<target ref="id21"/>
+			<label kind="guard" x="-168" y="-464">TM!=Steps[i]</label>
+			<label kind="synchronisation" x="-168" y="-448">finish!</label>
+			<nail x="-272" y="-432"/>
+			<nail x="136" y="-432"/>
+		</transition>
+		<transition>
+			<source ref="id15"/>
+			<target ref="id24"/>
+			<label kind="guard" x="-560" y="-56">i==NROffSteps-1
+&amp;&amp; !anyP(lockp)</label>
+			<label kind="synchronisation" x="-560" y="-24">dmissed!</label>
+			<label kind="assignment" x="-560" y="-8">i=0</label>
+			<nail x="-320" y="-56"/>
+		</transition>
+		<transition>
+			<source ref="id17"/>
+			<target ref="id15"/>
+			<label kind="guard" x="-1096" y="-128">!anyT(lock)</label>
+			<label kind="synchronisation" x="-1096" y="-112">prc!</label>
+			<label kind="assignment" x="-1096" y="-96">syncReleased(),
+syncFinish()</label>
+			<nail x="-992" y="-56"/>
+		</transition>
+		<transition>
+			<source ref="id19"/>
+			<target ref="id17"/>
+			<label kind="guard" x="-984" y="-312">i&lt;NROffSteps-1</label>
+			<label kind="synchronisation" x="-984" y="-296">synch!</label>
+		</transition>
+		<transition>
+			<source ref="id18"/>
+			<target ref="id19"/>
+			<label kind="guard" x="-808" y="-424">TM==OffSteps[i+1]</label>
+			<label kind="synchronisation" x="-808" y="-408">finish!</label>
+			<label kind="assignment" x="-808" y="-392">i++,
+pri=OffPrios[i]</label>
+		</transition>
+		<transition>
+			<source ref="id16"/>
+			<target ref="id18"/>
+			<label kind="select" x="-704" y="-336">sp:int[0,M-1]</label>
+			<label kind="guard" x="-704" y="-320">nextEventTime(OffSteps[i+1])==cfin[sp]
+&amp;&amp; executing[sp]&gt;0 &amp;&amp; !anyP(lockp)</label>
+			<label kind="assignment" x="-704" y="-288">TM=cfin[sp]</label>
+		</transition>
+		<transition>
+			<source ref="id16"/>
+			<target ref="id17"/>
+			<label kind="guard" x="-968" y="-192">nextEventTime(OffSteps[i+1])==OffSteps[i+1] &amp;&amp; 
+(!anyP(cfinValid)||OffSteps[i+1]&lt;minCfin(OffSteps[i+1]))
+&amp;&amp; !anyP(lockp)</label>
+			<label kind="synchronisation" x="-968" y="-144">synch!</label>
+			<label kind="assignment" x="-968" y="-128">i++,
+pri=OffPrios[i],
+TM=OffSteps[i]</label>
+		</transition>
+		<transition>
+			<source ref="id23"/>
+			<target ref="id24"/>
+			<label kind="guard" x="-224" y="-80">i==NRSteps-1 &amp;&amp; 
+!anyP(lockp) &amp;&amp;
+TM==MAXStep</label>
+			<label kind="synchronisation" x="-224" y="-32">dmissed!</label>
+			<label kind="assignment" x="-224" y="-16">i=0,
+newHyper()</label>
+			<nail x="-272" y="-80"/>
+		</transition>
+		<transition>
+			<source ref="id23"/>
+			<target ref="id24"/>
+			<label kind="guard" x="-136" y="-136">(i&lt;NRSteps-1 || TM&lt;MAXStep) 
+&amp;&amp; !anyP(lockp)</label>
+			<label kind="synchronisation" x="-136" y="-104">dmissed!</label>
+		</transition>
+		<transition>
+			<source ref="id21"/>
+			<target ref="id20"/>
+			<label kind="synchronisation" x="144" y="-232">synch!</label>
+		</transition>
+		<transition>
+			<source ref="id22"/>
+			<target ref="id13"/>
+			<label kind="guard" x="-184" y="-336">TM==Steps[i]</label>
+			<label kind="synchronisation" x="-184" y="-320">finish!</label>
+		</transition>
+		<transition>
+			<source ref="id24"/>
+			<target ref="id22"/>
+			<label kind="select" x="-480" y="-280">sp:int[0,M-1]</label>
+			<label kind="guard" x="-480" y="-264">nextEventTime(Steps[i])==cfin[sp]
+&amp;&amp; executing[sp]&gt;0
+&amp;&amp; !anyP(lockp)</label>
+			<label kind="assignment" x="-480" y="-216">TM=cfin[sp]</label>
+		</transition>
+		<transition>
+			<source ref="id20"/>
+			<target ref="id23"/>
+			<label kind="guard" x="184" y="-144">!anyT(lock)</label>
+			<label kind="synchronisation" x="184" y="-128">prc!</label>
+			<label kind="assignment" x="184" y="-112">syncReleased(),
+syncFinish()</label>
+		</transition>
+		<transition>
+			<source ref="id12"/>
+			<target ref="id20"/>
+			<label kind="guard" x="40" y="-224">i&lt;NRSteps-1</label>
+			<label kind="synchronisation" x="40" y="-208">synch!</label>
+			<label kind="assignment" x="40" y="-192">TM=Steps[i],
+i++,
+pri=Prios[i]</label>
+		</transition>
+	</template>
+	<template>
+		<name>Synchronizer</name>
+		<parameter>const int p_id</parameter>
+		<location id="id25" x="0" y="0">
+		</location>
+		<init ref="id25"/>
+	</template>
+	<template>
+		<name>Scheduler</name>
+		<parameter>const int p_id</parameter>
+		<location id="id26" x="0" y="0">
+		</location>
+		<init ref="id26"/>
+	</template>
+	<system>
 //System-Dependent Inst
 
-
+//System-Independent Inst
 </system>
 </nta>
