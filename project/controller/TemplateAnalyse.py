@@ -1,4 +1,4 @@
-# coding = utf-8
+# coding: utf-8
 
 from xml.etree import ElementTree as et
 
@@ -22,4 +22,4 @@ class TemplateAnalyse:
 
 if __name__ == '__main__':
     analyse = TemplateAnalyse()
-    template = analyse.readTemplate('')
+    tp = analyse.readTemplate(r'../sourcer/Template.xml')
