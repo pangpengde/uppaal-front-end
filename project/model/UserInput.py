@@ -2,5 +2,6 @@
 
 class UserInput(object):
     """docstring for UserInput"""
+
     def __init__(self):
         pass
