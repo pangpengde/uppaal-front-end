@@ -1,4 +1,5 @@
 # coding: utf-8
+import model.UserInput
 
 
 class Template:
@@ -50,12 +51,6 @@ class Template:
     MaxPi = None
     #最大执行时间？
     MaxExe = None
-
-    #System系统描述
-    #处理器部分前面已经全部定义了
-    #任务在处理器上的最好、最坏执行时间，与到处理器之间的映射与onPE有关，这个是我自己定义的结构现在
-    #excTime[MN][2] = {},形如excTime = {{2,2},{2,3}}
-    excTime = {}
 
     def __init__(self):
         pass

@@ -2,10 +2,11 @@
 
 
 class Task(object):
+    #task id
+    tau = None
     name = None
     period = None
     offset = None
-    Mapping = None
     bcet = None
     wcet = None
 
