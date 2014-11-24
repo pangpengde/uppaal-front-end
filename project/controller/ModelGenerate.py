@@ -8,8 +8,7 @@ class ModelGenerate():
         pass
 
 
-
 if __name__ == '__main__':
    ui = UserInput() 
    ui.test()
-   
+
