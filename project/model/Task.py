@@ -18,20 +18,20 @@ class Task(object):
         self.bcet = bcet
         self.wcet = wcet
 
-    def gettau(self):
+    def get_tau(self):
         return self.tau
 
-    def getname(self):
+    def get_name(self):
         return self.name
 
-    def getperiod(self):
+    def get_period(self):
         return self.period
 
-    def getoffset(self):
+    def get_offset(self):
         return self.offset
 
-    def getbcet(self):
+    def get_bcet(self):
         return self.bcet
 
-    def getwcet(self):
+    def get_wcet(self):
         return self.wcet

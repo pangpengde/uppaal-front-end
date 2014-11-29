@@ -1,18 +1,18 @@
 #coding:utf-8
-import model.Task
-import model.Platform
+import Task
+import Platform
 
 
 class Mapping(object):
     task = None
-    Platform = None
+    platform = None
 
     def __init__(self, task, platform):
         self.task = task
         self.platform = platform
 
-    def getorigin(self):
+    def get_task(self):
         return self.task
 
-    def getdest(self):
+    def get_platform(self):
         return self.platform

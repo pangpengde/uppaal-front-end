@@ -11,13 +11,13 @@ class Platform(object):
         self.name = name
         self.sch = sch
 
-    def getpid(self):
+    def get_pid(self):
         return self.pid
 
-    def getname(self):
+    def get_name(self):
         return self.name
 
-    def getsch(self):
+    def get_sch(self):
         return self.sch
 
 
@@ -28,5 +28,5 @@ class Bus(Platform):
         Platform.__init__(self, pid, name, sch)
         self.speed = speed
 
-    def getspeed(self):
+    def get_speed(self):
         return self.speed

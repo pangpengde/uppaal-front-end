@@ -1,5 +1,5 @@
 # coding: utf-8
-import model.UserInput
+import UserInput
 
 
 class Template:
