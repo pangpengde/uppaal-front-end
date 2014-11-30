@@ -1,19 +1,19 @@
 # coding : utf-8
 
-import Task
-import Platform
-import Mapping
-import Dep
+from Task import Task
+from Platform import Platform
+from Mapping import Mapping
+from Dep import Dep
 from Platform import Bus
 
 
 class UserInput(object):
     """docstring for UserInput"""
-    tasks = {}
+    tasks = []
     # platform includes bus
-    platforms = {}
-    mappings = {}
-    deps = {}
+    platforms = []
+    mappings = []
+    deps = []
 
     def __init__(self):
         pass
@@ -25,7 +25,7 @@ class UserInput(object):
         t2 = Task(2, 't2', 6, 0, 1, 1)
         self.tasks.append(t2)
         # TODO 把task里的变量都赋值上
-        #pid, name, sch
+        # pid, name, sch
         bus = Bus(1, 'bus', 'FP', 2)
         self.platforms.append(bus)
         p1 = Platform(2, 'p1', 'RM')

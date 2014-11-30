@@ -3,12 +3,17 @@
 from xml.etree import ElementTree as et
 
 from model.Template import Template
+from model.UserInput import UserInput
 
 
 class TemplateAnalyse:
 
-    def __init__(self):
-        pass
+    userinput = None
+    template = None
+
+    def __init__(self, userinput, template):
+        self.userinput = userinput
+        self.template = template
 
     @classmethod
     def readTemplate(self, path):
@@ -22,4 +27,4 @@ class TemplateAnalyse:
 
 if __name__ == '__main__':
     analyse = TemplateAnalyse()
-    tp = analyse.readTemplate(r'..\\source\\Template.xml')
+    # tp = analyse.readTemplate(r'..\\source\\Template.xml')
