@@ -11,20 +11,21 @@ class TemplateAnalyse:
     userinput = None
     template = None
 
-    def __init__(self, userinput, template):
-        self.userinput = userinput
-        self.template = template
+    def __init__(self):
+        self.userinput = UserInput()
+        self.userinput.test()
+        self.template = Template()
+        for i in self.userinput.Tasks:
 
-    @classmethod
-    def readTemplate(self, path):
+
+    # @classmethod
+    def read_template(self, path):
         # 将指定路径的template.xml解析出来
         tp = Template()
         tp.nta = et.parse(path)
-
-
         return tp
 
 
 if __name__ == '__main__':
     analyse = TemplateAnalyse()
-    # tp = analyse.readTemplate(r'..\\source\\Template.xml')
+    # tp = analyse.read_template(r'..\\source\\Template.xml')
