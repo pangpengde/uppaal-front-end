@@ -39,6 +39,12 @@ class mainFrame(wx.Frame):
         mainSizer.Add(specification, 0, wx.CENTER)
         mainSizer.Add(result, 0, wx.CENTER)
         self.SetSizerAndFit(mainSizer)
+        #self.add_task()
+
+    """def add_task(self):
+        sp = wx.Panel(self, -1)
+        self.mainSizer.Add(sp, 0, wx.CENTER)"""
+
 
 def main():
     app = wx.App()
