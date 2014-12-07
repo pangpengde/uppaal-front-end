@@ -16,9 +16,10 @@ class TemplateAnalyse:
         self.userinput.test()
         self.template = Template()
         for i in self.userinput.Tasks:
+            pass
 
 
-    # @classmethod
+    @classmethod
     def read_template(self, path):
         # 将指定路径的template.xml解析出来
         tp = Template()

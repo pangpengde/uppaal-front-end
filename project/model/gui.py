@@ -1,15 +1,14 @@
 # coding:utf-8
-
-
 import wx
 
 class mainFrame(wx.Frame):
 
     def __init__(self, parent, title):
         super(mainFrame, self).__init__(parent, title=title, size=(800, 600))
-        self.init_ui()
+        self.init_toolbar()
+        self.init_panel()
 
-    def init_ui(self):
+    def init_toolbar(self):
         menubar = wx.MenuBar()
         fileMenu = wx.Menu()
         fileMenu.Append(wx.ID_NEW, '&New', 'Start to describe a new system')
@@ -30,10 +29,20 @@ class mainFrame(wx.Frame):
     def on_quit(self, e):
         self.Close()
 
+    def init_panel(self):
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
+        specification = wx.Panel(self, -1)
+        wx.TextCtrl(specification, pos=(3, 3), size=(775, 250))
+
+        result = wx.Panel(self, -1)
+        wx.TextCtrl(result, pos=(3, -1), size = (775, 250))
+        mainSizer.Add(specification, 0, wx.CENTER)
+        mainSizer.Add(result, 0, wx.CENTER)
+        self.SetSizerAndFit(mainSizer)
 
 def main():
     app = wx.App()
-    frame = mainFrame(None, 'Schedulability Analyse')
+    frame = mainFrame(None, 'Schedulability Analyse Tool')
     frame.Show()
     app.MainLoop()
 

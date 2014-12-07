@@ -4,20 +4,20 @@ import Task
 
 
 class Dep(object):
-    origin = None
-    dest = None
+    predecessor = None
+    taskName = None
     data = None
 
-    def __init__(self, origin, dest, data):
-        self.origin = origin
-        self.dest = dest
+    def __init__(self, predecessor, taskName, data):
+        self.predecessor = predecessor
+        self.taskName = taskName
         self.data = data
 
-    def get_origin(self):
-        return self.origin
+    def get_predecessor(self):
+        return self.predecessor
 
-    def get_dest(self):
-        return self.dest
+    def get_taskname(self):
+        return self.taskName
 
     def get_data(self):
         return self.data
