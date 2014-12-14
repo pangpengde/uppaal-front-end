@@ -1,0 +1,6 @@
+
+
+scheduler=Scheduler(pes);
+// List one or more processes to be composed into a system.
+system Task,DepManager,bus,scheduler,policy_EDF,policy_RMS,Global;</system>
+</nta>

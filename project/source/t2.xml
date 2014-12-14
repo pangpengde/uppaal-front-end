@@ -1,0 +1,75 @@
+
+const int MaxTime=500;
+const int BUFFERSIZE=30;//the maximu buffersize
+const int BUSSIZE=20; 
+const int Policies = 3;
+const int EDF = 0;
+const int RMS = 1;
+
+
+typedef int [0,N-1] tid_t;//task id
+typedef int [0,P-1] pid_t;///processor id
+typedef int [0,MaxTime] time_t;//The maximum time constant for all tasks,this is used of UPPAAL state footprint reduction.
+typedef int[0,Policies-1] policy_t;
+typedef struct{
+    pid_t pid;
+    policy_t policy;
+    bool preemptive;
+}processor;
+typedef processor processors[pid_t]; 
+int [-1,N] cpuQueue[P][BUFFERSIZE];
+clock time[N];//
+clock exec[N];//
+clock respt[N];
+clock cpuUsed[P];
+bool released[N];
+bool running[N];
+///Data structure to keep task's attributes
+typedef struct{
+    time_t init_offset;//the time offset for the task first released;
+    time_t offset;//the time offset for task released in every period;
+    time_t bcet;//best case execution time of task.
+    time_t wcet;//worst case execution time of task.
+    time_t deadline;//the relative deadline,calculate at the period starts.
+    time_t period;//period of the task
+    pid_t pe;//the processor request to run the task
+    }task_t;
+typedef struct{
+    bool release;
+    tid_t source;
+    tid_t destination;
+}msg;
+msg busQueue[BUSSIZE];
+void addMsg(tid_t source,tid_t destination){
+    int [0,BUFFERSIZE-1] temp=0;
+    while(busQueue[temp].release) temp++;
+    busQueue[temp].release=1;
+    busQueue[temp].source=source;
+    busQueue[temp].destination=destination;
+    temp=0;
+}
+meta struct{
+    meta tid_t task;
+    meta bool preemptive;
+}param;
+void setParam(tid_t t,bool p){
+    param.task=t;
+    param.preemptive=p;
+}
+bool empty(pid_t pid){return cpuQueue[pid][0]==-1;}
+void insertQueue(pid_t pid,tid_t tid,int[0,BUFFERSIZE-1] index){
+    for(i:int [1,BUFFERSIZE]) if(BUFFERSIZE-i&gt;index) cpuQueue[pid][BUFFERSIZE-i]=cpuQueue[pid][BUFFERSIZE-i-1];
+    cpuQueue[pid][index]=tid;
+}
+broadcast chan check_dep[N],dep_ack[N];//chan used for checke dependency;
+broadcast chan check_pe[N];//chan used for check resource;
+broadcast chan sch_pol[P][Policies];
+//urgent broadcast chan run[N],preempt[N];//chan used for schedul the task;
+broadcast chan finish[N];//chan used to indicate the task has finishd;
+urgent broadcast  chan run[N],preempt[N];
+urgent broadcast chan urg;//used to performe urgent activate
+
+int[0,1] dynDep[N][N];
+//Config staDep and task
+//original tasks dependency;
+

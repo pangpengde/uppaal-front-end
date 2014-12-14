@@ -27,7 +27,6 @@ class UserInput(object):
         self.tasks.append(t3)
         t4 = Task(3, 3, 1, 2, 3, 20, 6, 1)
         self.tasks.append(t4)
-        # TODO 把task里的变量都赋值上
         #bus(bcet, wcet)
         bus = Bus(1, 2)
         self.bus.append(bus)

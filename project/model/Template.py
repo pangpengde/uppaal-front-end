@@ -30,8 +30,6 @@ class Template:
         self.Tasks.append(attribute)
 
     def init_stadap(self):
-        for i in range(0, self.N-1):
-            for j in range(0, self.N-1):
-                self.staDep[i][j] = 0
+        self.staDep = [[0 for col in range(self.N)] for row in range(self.N)]
 
 

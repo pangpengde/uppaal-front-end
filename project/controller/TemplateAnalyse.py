@@ -8,7 +8,7 @@ from model.UserInput import UserInput
 
 class TemplateAnalyse(object):
 
-    userinput = None
+    user_input = None
     template = None
 
     n = 0
@@ -32,16 +32,13 @@ class TemplateAnalyse(object):
         for pe in self.user_input.processors:
             self.p += 1
         for dep in self.user_input.deps:
-            self.template.set_stadep(dep.get_task().t_id, dep.get_predecessor().t_id)
-
-    """@classmethod
-    def read_template(self, path):
-        # 将指定路径的template.xml解析出来
-        tp = Template()
-        tp.nta = et.parse(path)
-        return tp"""
-
+            t = dep.get_task()
+            p = dep.get_predecessor()
+            self.template.set_stadep(t.t_id, p.t_id)
 
 if __name__ == '__main__':
-    analyse = TemplateAnalyse()
+    template = TemplateAnalyse()
+    print template.n
+    print template.p
+    # analyse = TemplateAnalyse()
     # tp = analyse.read_template(r'..\\source\\Template.xml')
