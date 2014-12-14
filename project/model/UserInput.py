@@ -16,7 +16,7 @@ class UserInput(object):
     deps = []
 
     def __init__(self):
-        pass
+       pass
 
     def test(self):
         # tau, name, period, offset, bcet, wcet
@@ -37,5 +37,5 @@ class UserInput(object):
         self.mappings.append(Mapping(t2, p2))
 
         # dep = (origin, dest, data)
-        dep1 = Dep(t1, t2, 2)
+        dep1 = Dep(t2, t1, 2)
         self.deps.append(dep1)
