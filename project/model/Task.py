@@ -19,7 +19,7 @@ class Task(object):
     # the processor request to run the task
     pe = None
 
-    def __init__(self, i_offset, offset, bcet, wcet, deadline, period, pe):
+    def __init__(self, t_id,  i_offset, offset, bcet, wcet, deadline, period, pe):
         self.t_id = t_id
         self.i_offset = i_offset
         self.offset = offset
