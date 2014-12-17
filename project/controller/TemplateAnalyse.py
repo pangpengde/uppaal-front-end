@@ -33,8 +33,16 @@ class TemplateAnalyse(object):
             self.p += 1
         for dep in self.user_input.deps:
             t = dep.get_task()
-            p = dep.get_predecessor()
-            self.template.set_stadep(t.t_id, p.t_id)
+            pr = dep.get_predecessor()
+            self.template.set_stadep(t.t_id, pr.t_id)
+        self.template.set_p(self.p)
+        self.template.set_n(self.n)
+
+    def get_ui(self):
+        return self.user_input
+
+    def get_template(self):
+        return self.template
 
 if __name__ == '__main__':
     template = TemplateAnalyse()

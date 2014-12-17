@@ -17,6 +17,18 @@ class UserInput(object):
     def __init__(self):
        pass
 
+    def get_tasks(self):
+        return self.tasks
+
+    def get_processors(self):
+        return self.processors
+
+    def get_bus(self):
+        return self.bus
+
+    def get_deps(self):
+        return self.deps
+
     def test(self):
         # tau, i_offset, offset, bcet, wcet, deadline, period, pe
         t1 = Task(0, 0, 1, 2, 2, 18, 4, 0)

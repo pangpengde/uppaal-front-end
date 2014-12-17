@@ -20,14 +20,26 @@ class Template:
     def set_p(self, p):
         self.P = p
 
+    def get_p(self):
+        return self.P
+
     def set_n(self, n):
         self.N = n
+
+    def get_n(self):
+        return self.N
 
     def set_stadep(self, i, j):
         self.staDep[i][j] = 1
 
+    def get_stadep(self):
+        return self.staDep
+
     def set_tasks(self, attribute):
         self.Tasks.append(attribute)
+
+    def get_tasks(self):
+        return self.Tasks
 
     def init_stadap(self):
         self.staDep = [[0 for col in range(self.N)] for row in range(self.N)]
