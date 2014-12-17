@@ -9,7 +9,7 @@ class Template:
     N = None
 
     # 静态依赖矩阵 n*n
-    staDep = []
+    staDep = {}
 
     #任务矩阵 n*7
     Tasks = []

@@ -34,10 +34,37 @@ class ModelGenerate(object):
 
     def set_part2(self):
         self.part2 = self.const + ' ' + self.int + ' ' + '[0,1]' + ' ' + 'staDep[N][N]' + self.equal + '{\n'
-        self.part2 += str(self.template.get_stadep())
+        # self.part2 += str(self.template.get_stadep())
+        col = self.template.get_n()
+        row = self.template.get_n()
+        staDep = self.template.get_stadep()
+        for i in range(row): # get_stadep()=[[0, 0, 0, 0], [1, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+            self.part2 += '\t{'
+            for j in range(col):
+                if j == col-1:
+                    self.part2 += str(staDep[i][j])
+                else:
+                    self.part2 += str(staDep[i][j]) + ','
+            if i == row-1:
+                self.part2 += '}\n'
+            else:
+                self.part2 += '},\n'
         self.part2 += '};\n'
         self.part2 += self.const + ' ' + self.task_t + ' ' + 'Task[N]' + self.equal + '{\n'
-        self.part2 += str(self.template.get_tasks())
+        col = 7
+        row = self.template.get_n()
+        Tasks = self.template.get_tasks()
+        for i in range(row):
+            self.part2 += '\t{'
+            for j in range(col):
+                if j == col-1:
+                    self.part2 += str(Tasks[i][j])
+                else:
+                    self.part2 += str(Tasks[i][j]) + ','
+            if i == row-1:
+                self.part2 += '}\n'
+            else:
+                self.part2 += '},\n'
         self.part2 += '};\n'
 
     def set_part3(self):

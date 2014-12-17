@@ -20,13 +20,22 @@ class TemplateAnalyse(object):
         self.template = Template()
         for task in self.user_input.tasks:
             self.n += 1
-            self.template.set_tasks(task.i_offset)
+            temp = []
+            temp.append(task.i_offset)
+            temp.append(task.offset)
+            temp.append(task.bcet)
+            temp.append(task.wcet)
+            temp.append(task.deadline)
+            temp.append(task.period)
+            temp.append(task.pe)
+            self.template.set_tasks(temp)
+            '''self.template.set_tasks(task.i_offset)
             self.template.set_tasks(task.offset)
             self.template.set_tasks(task.bcet)
             self.template.set_tasks(task.wcet)
             self.template.set_tasks(task.deadline)
             self.template.set_tasks(task.period)
-            self.template.set_tasks(task.pe)
+            self.template.set_tasks(task.pe)'''
         self.template.set_n(self.n)
         self.template.init_stadap()
         for pe in self.user_input.processors:
