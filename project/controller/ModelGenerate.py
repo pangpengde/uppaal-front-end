@@ -29,8 +29,8 @@ class ModelGenerate(object):
         self.write_model()
 
     def set_part1(self):
-        self.part1 = self.const + ' ' + self.int + ' N ' + self.equal + ' ' + str(self.template.get_n()) + '\n'
-        self.part1 += self.const + ' ' + self.int + ' P ' + self.equal + ' ' + str(self.template.get_p()) + '\n'
+        self.part1 = self.const + ' ' + self.int + ' N ' + self.equal + ' ' + str(self.template.get_n()) + ';\n'
+        self.part1 += self.const + ' ' + self.int + ' P ' + self.equal + ' ' + str(self.template.get_p()) + ';\n'
 
     def set_part2(self):
         self.part2 = self.const + ' ' + self.int + ' ' + '[0,1]' + ' ' + 'staDep[N][N]' + self.equal + '{\n'
@@ -50,37 +50,35 @@ class ModelGenerate(object):
             else:
                 self.part2 += '},\n'
         self.part2 += '};\n'
-        self.part2 += self.const + ' ' + self.task_t + ' ' + 'Task[N]' + self.equal + '{\n'
-        col = 7
+        self.part2 += self.const + ' ' + self.task_t + ' ' + 'Tasks[N]' + self.equal + '{\n'
+        col = 6
         row = self.template.get_n()
-        Tasks = self.template.get_tasks()
+        tasks = self.template.get_tasks()
         for i in range(row):
             self.part2 += '\t{'
             for j in range(col):
                 if j == col-1:
-                    self.part2 += str(Tasks[i][j])
+                    self.part2 += str(tasks[i][j])
                 else:
-                    self.part2 += str(Tasks[i][j]) + ','
+                    self.part2 += str(tasks[i][j]) + ','
             if i == row-1:
                 self.part2 += '}\n'
             else:
                 self.part2 += '},\n'
-        self.part2 += '};\n'
+        self.part2 += '};'
 
     def set_part3(self):
         self.part3 = self.const + ' ' + 'processors' + ' ' + 'pes' + ' ' + self.equal + '{\n'
         for proc in self.procs:
             if proc.get_pid() == self.template.get_p() - 1:
                 self.part3 += '\t{' + str(proc.get_pid()) + ',' + proc.get_policy() + ',' \
-                              + str(proc.get_preempt()) + '}\n'
+                              + str(proc.get_preempt()).lower() + '}\n'
             else:
                 self.part3 += '\t{' + str(proc.get_pid()) + ',' + proc.get_policy() + ','\
-                              + str(proc.get_preempt()) + '},\n'
+                              + str(proc.get_preempt()).lower() + '},\n'
         self.part3 += '};\n'
-        self.temp_i = 0
-        for b in self.bus:
-            self.part3 += 'bus' + str(self.temp_i) + ' '+ self.equal + ' ' + \
-                          'BUS(' + str(b.get_bcet()) + ',' + str(b.get_wcet()) + ')\n'
+        self.part3 += 'bus' + ' ' + self.equal + ' ' + 'BUS(' + str(self.bus.get_bcet()) + ','\
+                      + str(self.bus.get_wcet()) + ');\n'
 
     def write_model(self):
         # print self.t1

@@ -27,7 +27,6 @@ bool running[N];
 ///Data structure to keep task's attributes
 typedef struct{
     time_t init_offset;//the time offset for the task first released;
-    time_t offset;//the time offset for task released in every period;
     time_t bcet;//best case execution time of task.
     time_t wcet;//worst case execution time of task.
     time_t deadline;//the relative deadline,calculate at the period starts.

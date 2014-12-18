@@ -6,8 +6,6 @@ class Task(object):
     t_id = None
     # the time offset for the task first released;
     i_offset = None
-    # the time offset for task released in every period;
-    offset = None
     # best case execution time of task.
     bcet = None
     # worst case execution time of task.
@@ -19,10 +17,9 @@ class Task(object):
     # the processor request to run the task
     pe = None
 
-    def __init__(self, t_id,  i_offset, offset, bcet, wcet, deadline, period, pe):
+    def __init__(self, t_id,  i_offset, bcet, wcet, deadline, period, pe):
         self.t_id = t_id
         self.i_offset = i_offset
-        self.offset = offset
         self.bcet = bcet
         self.wcet = wcet
         self.deadline = deadline
@@ -34,9 +31,6 @@ class Task(object):
 
     def get_ioffset(self):
         return self.i_offset
-
-    def get_offset(self):
-        return self.offset
 
     def get_bcet(self):
         return self.bcet

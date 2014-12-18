@@ -4,7 +4,7 @@ from xml.etree import ElementTree as et
 
 from model.Template import Template
 from model.UserInput import UserInput
-
+from model.Processor import Processor
 
 class TemplateAnalyse(object):
 
@@ -21,21 +21,13 @@ class TemplateAnalyse(object):
         for task in self.user_input.tasks:
             self.n += 1
             temp = []
-            temp.append(task.i_offset)
-            temp.append(task.offset)
-            temp.append(task.bcet)
-            temp.append(task.wcet)
-            temp.append(task.deadline)
-            temp.append(task.period)
-            temp.append(task.pe)
+            temp.append(task.get_ioffset())
+            temp.append(task.get_bcet())
+            temp.append(task.get_wcet())
+            temp.append(task.get_deadline())
+            temp.append(task.get_period())
+            temp.append(task.get_pe().get_pid())
             self.template.set_tasks(temp)
-            '''self.template.set_tasks(task.i_offset)
-            self.template.set_tasks(task.offset)
-            self.template.set_tasks(task.bcet)
-            self.template.set_tasks(task.wcet)
-            self.template.set_tasks(task.deadline)
-            self.template.set_tasks(task.period)
-            self.template.set_tasks(task.pe)'''
         self.template.set_n(self.n)
         self.template.init_stadap()
         for pe in self.user_input.processors:

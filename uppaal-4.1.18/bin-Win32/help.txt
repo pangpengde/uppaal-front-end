@@ -1,0 +1,92 @@
+Usage: verifyta [OPTION]... MODEL QUERY
+where MODEL is a model file and QUERY is a query file.
+If QUERY is missing it will be guessed.
+
+Tuning options:
+  -A  Use convex-hull approximation.
+  -C  Disable most memory reduction techniques.
+  -H n
+      Set hash table size for bit state hashing to 2**n
+      (default = 27)
+  -n <0|1|2|3|4>
+      Select extrapolation operator.
+        0: Automatic
+        1: No extrapolation (use with care)
+        2: Difference extrapolation
+        3: Location based extrapolation
+        4: Lower/upper extrapolation
+  -o <0|1|2|3|4>
+      Select search order.
+        0: Breadth first (default, -b too)
+        1: Depth first (-d too)
+        2: Random depth first
+        3: Optimal first (requires -t1 or -t2)
+        4: Random optimal depth first (requires -t1 or -t2)
+  -S <0|1|2>
+      Optimize space consumption (0 = none, 1 = default, 2 = most)
+  -T  Reuse state space when several properties are examined.
+  -Z  Use bit-state hashing.
+
+Options for trace generation:
+  -f prefix
+      Write symbolic traces to files 'prefix-n.xtr' rather than to stderr.
+  -t <0|1|2>
+      Generate diagnostic information on stderr.
+        0: Some trace
+        1: Shortest trace (disables reuse)
+        2: Fastest trace (disables reuse)
+  -y  Display traces symbolically (post-stable).
+  -Y  Display traces symbolically (pre- and post-stable).
+
+Miscellaneous options:
+  -h  Shows this help screen.
+  -q  Do not display the option summary.
+  -r seed
+      Set seed for random number generator (default is current time).
+  -s  Do not display the progress indicator.
+  -u  Show summary after verification (incorrect for liveness properties).
+  -v  Show version number.
+  -x filename
+      Save the (modified) system in XML format, in file 'filename'.
+      If the system has been modified, an associated query file is created.
+  -X prefix
+      Save the symbolic trace in file 'prefixPropertynumber.xml'
+  -p double
+      lower (delta) probabilistic uncertainty.
+  -P double
+      upper (delta) probabilistic uncertainty.
+  -a double
+      probability of false negatives (alpha).
+  -B double
+      probability of false positives (beta).
+  -E double
+      probability uncertainty (epsilon).
+  -i double
+      threshold u0 for comparing probabilities.
+  -j double
+      threshold u1 for comparing probabilities.
+  -w double
+      histogram bar width.
+  -c 0|1
+      activate (1) or not (0) the SMC parametric comparison.
+  -V activate SMC coverage.
+  -R simulation resolution (pixels).
+  -D discretization step size (time) for hybrid systems.
+  -M activate Modest semantics for updates.
+  -L filename
+     logs the outcomes of the simulations for probability evaluations.
+  -F double
+     outputs to a file a sampling of simulations (when simulate is used).
+
+The ordering of options is significant.
+
+Environment variables:
+  UPPAAL_DUMP_STATE          output a state satisfying the property.
+  UPPAAL_DISABLE_SWEEPLINE   disable sweepline method
+  UPPAAL_DISABLE_OPTIMISER   disable peephole optimiser
+  UPPAAL_DISABLE_SYMMETRY    disable symmetry reduction
+  UPPAAL_COMPILE_ONLY        write compiled model to stdout and stop
+  UPPAAL_OLD_SYNTAX          use version 3.4 syntax
+
+The value of these variables does not matter. Defining them is
+enough to activate the feature in question.

@@ -1,0 +1,9 @@
+# 0 STDIN 1 STDOUT 2 STDERR
+# counterexample re-direct to model.trace
+verifyta -qst 1 model.xml model.q 2>model.trace
+
+# result re-direct to model.result, counterexample re-direct to model.trace
+verifyta -qst 1 model.xml model.q 1>model.result 2>>model.trace
+
+# result & counterexample re-direct to model.trace
+verifyta -qst 1 model.xml model.q  1>model.trace 2>&1
