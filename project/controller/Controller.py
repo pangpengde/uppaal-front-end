@@ -18,7 +18,7 @@ class Controller(object):
         self.propertyPath = '"../source/model.q"'
         self.resultPath = '"../source/model.result"'
         self.tracePath = '"../source/model.trace"'
-        self.verifytaPath = '"../../uppaal-4.1.18/bin-Win32/verifyta.exe"'
+        self.verifytaPath = '../../uppaal-4.1.18/bin-Win32/verifyta.exe'
 
     def model_validate(self):
          # 调用uppaal,验证model.xml,生成结果文件result.trace放在source文件夹下
