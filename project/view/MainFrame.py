@@ -3,16 +3,20 @@ import wx
 
 
 class mainFrame(wx.Frame):
+    # only one menu bar in the mainframe,includes file menu and about menu
     menubar = None
     fileMenu = None
     aboutmenu = None
+    # the system specification area, includes processor panel, and so on
     specpanel = None
     specSizer = None
-    propanel = []
+    # the processor panel includes several processor, each in a spec_propanel
+    propanel = None
     proSizer = None
-    spec_propanel = None
-    resulpanel = None
+    spec_propanel = []
     taskn = 0
+    # the result area
+    resulpanel = None
 
     def __init__(self, parent, title):
         super(mainFrame, self).__init__(parent, title=title, size=(900, 600))
@@ -20,9 +24,8 @@ class mainFrame(wx.Frame):
         self.init_aboutmenu()
         self.init_menubar()
         self.init_specpanel()
-        self.init_spec_propanel()
-        self.add_spec_propanel()
         self.init_propanel()
+        self.init_spec_propanel()
         self.add_propanel()
         self.init_resultpanel()
 
@@ -54,50 +57,82 @@ class mainFrame(wx.Frame):
 
     def add_propanel(self):
         self.specSizer.Add(self.propanel)
-        self.propanel.SetSizerAndFit(self.proSizer)
         self.specpanel.SetSizerAndFit(self.specSizer)
 
     def init_propanel(self):
-        self.propanel.append(wx.Panel(self.specpanel, size=(500, 200)))
-        self.propanel[0].SetBackgroundColour('#00ff00')
+        self.propanel = wx.Panel(self.specpanel, size=(500, 600))
+        self.propanel.SetBackgroundColour('#00ff00')
         self.proSizer = wx.BoxSizer(wx.VERTICAL)
-        processor = wx.StaticText(self.specpanel, label="Processors: ")
+        processor = wx.StaticText(self.propanel, label="Processors: ")
         self.proSizer.Add(processor)
-        self.proSizer.Add(self.spec_propanel[0])
-        self.taskn += 1
 
     def init_spec_propanel(self):
-        self.spec_propanel = wx.Panel(self.specpanel, size=(500, 100))
+        self.spec_propanel.append(wx.Panel(self.propanel, size=(500, 100)))
+        processorgrid = wx.GridBagSizer(hgap=5, vgap=2)
+        pname = wx.StaticText(self.spec_propanel[self.taskn], label="name: ")
+        processorgrid.Add(pname, pos=(0, 0))
 
-    def add_spec_propanel(self):
-        processorGrid = wx.GridBagSizer(hgap=5, vgap=2)
-        pname = wx.StaticText(self.spec_propanel, label="name: ")
-        processorGrid.Add(pname, pos=(0, 0))
+        edit_pname = wx.TextCtrl(self.spec_propanel[self.taskn], size=(70, -1))
+        processorgrid.Add(edit_pname, pos=(1, 0))
 
-        edit_pname = wx.TextCtrl(self.spec_propanel, size=(70, -1))
-        processorGrid.Add(edit_pname, pos=(1, 0))
-
-        policy = wx.StaticText(self.spec_propanel, label="policy: ")
-        processorGrid.Add(policy, pos=(0, 1))
+        policy = wx.StaticText(self.spec_propanel[self.taskn], label="policy: ")
+        processorgrid.Add(policy, pos=(0, 1))
 
         policylist = ['RMS', 'EDF']
-        policycombo = wx.ComboBox(self.spec_propanel, -1, size=(70, -1), value=" ", choices=policylist, style=wx.CB_DROPDOWN)
-        processorGrid.Add(policycombo, pos=(1, 1))
+        policycombo = wx.ComboBox(self.spec_propanel[self.taskn], -1, size=(70, -1), value=" ", choices=policylist, style=wx.CB_DROPDOWN)
+        processorgrid.Add(policycombo, pos=(1, 1))
 
-        preempt = wx.StaticText(self.spec_propanel, label="preemptible?: ")
-        processorGrid.Add(preempt, pos=(0, 2))
+        preempt = wx.StaticText(self.spec_propanel[self.taskn], label="preemptible?: ")
+        processorgrid.Add(preempt, pos=(0, 2))
 
         preemptlist = ['true', 'false']
-        preemptcombo = wx.ComboBox(self.spec_propanel, -1, size=(70, -1), value=" ", choices=preemptlist, style=wx.CB_DROPDOWN)
-        processorGrid.Add(preemptcombo, pos=(1, 2))
+        preemptcombo = wx.ComboBox(self.spec_propanel[self.taskn], -1, size=(70, -1), value=" ", choices=preemptlist, style=wx.CB_DROPDOWN)
+        processorgrid.Add(preemptcombo, pos=(1, 2))
 
-        pro_dButton = wx.Button(self.spec_propanel, size=(70, -1), label="Delete")
-        pro_aButton = wx.Button(self.spec_propanel, size=(70, -1), label="Add")
-        processorGrid.Add(pro_dButton, pos=(1, 3))
-        processorGrid.Add(pro_aButton, pos=(1, 4))
+        pro_dButton = wx.Button(self.spec_propanel[self.taskn], size=(70, -1), label="Delete")
+        pro_aButton = wx.Button(self.spec_propanel[self.taskn], size=(70, -1), label="Add")
+        processorgrid.Add(pro_dButton, pos=(1, 3))
+        processorgrid.Add(pro_aButton, pos=(1, 4))
         self.Bind(wx.EVT_BUTTON, self.on_pro_dbutton, pro_dButton)
         self.Bind(wx.EVT_BUTTON, self.on_pro_abutton, pro_aButton)
-        self.spec_propanel.SetSizerAndFit(processorGrid)
+        self.spec_propanel[self.taskn].SetSizerAndFit(processorgrid)
+        self.proSizer.Add(self.spec_propanel[self.taskn])
+        self.propanel.SetSizerAndFit(self.proSizer)
+        self.taskn += 1
+
+    def add_spec_propanel(self):
+        self.spec_propanel.append(wx.Panel(self.propanel, size=(500, 100)))
+        processorgrid = wx.GridBagSizer(hgap=5, vgap=2)
+        pname = wx.StaticText(self.spec_propanel[self.taskn], label="name: ")
+        processorgrid.Add(pname, pos=(0, 0))
+
+        edit_pname = wx.TextCtrl(self.spec_propanel[self.taskn], size=(70, -1))
+        processorgrid.Add(edit_pname, pos=(1, 0))
+
+        policy = wx.StaticText(self.spec_propanel[self.taskn], label="policy: ")
+        processorgrid.Add(policy, pos=(0, 1))
+
+        policylist = ['RMS', 'EDF']
+        policycombo = wx.ComboBox(self.spec_propanel[self.taskn], -1, size=(70, -1), value=" ", choices=policylist, style=wx.CB_DROPDOWN)
+        processorgrid.Add(policycombo, pos=(1, 1))
+
+        preempt = wx.StaticText(self.spec_propanel[self.taskn], label="preemptible?: ")
+        processorgrid.Add(preempt, pos=(0, 2))
+
+        preemptlist = ['true', 'false']
+        preemptcombo = wx.ComboBox(self.spec_propanel[self.taskn], -1, size=(70, -1), value=" ", choices=preemptlist, style=wx.CB_DROPDOWN)
+        processorgrid.Add(preemptcombo, pos=(1, 2))
+
+        pro_dButton = wx.Button(self.spec_propanel[self.taskn], size=(70, -1), label="Delete")
+        pro_aButton = wx.Button(self.spec_propanel[self.taskn], size=(70, -1), label="Add")
+        processorgrid.Add(pro_dButton, pos=(1, 3))
+        processorgrid.Add(pro_aButton, pos=(1, 4))
+        self.Bind(wx.EVT_BUTTON, self.on_pro_dbutton, pro_dButton)
+        self.Bind(wx.EVT_BUTTON, self.on_pro_abutton, pro_aButton)
+        self.spec_propanel[self.taskn].SetSizerAndFit(processorgrid)
+        self.proSizer.Add(self.spec_propanel[self.taskn])
+        self.propanel.SetSizerAndFit(self.proSizer)
+        self.taskn += 1
 
     def init_resultpanel(self):
         self.resulpanel = wx.Panel(self)
@@ -110,12 +145,9 @@ class mainFrame(wx.Frame):
 
     def on_pro_abutton(self, e):
         # self.add_spec_propanel()
-        self.propanel.append(wx.Panel(self.specpanel, size=(500, 200)))
-        self.proSizer.Add(self.spec_propanel)
+        self.add_spec_propanel()
         self.propanel.SetSizerAndFit(self.proSizer)
-
-        # how to fresh the panel
-
+        self.specpanel.SetSizerAndFit(self.specSizer)
 
 
 def main():
