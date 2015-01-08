@@ -350,7 +350,7 @@ class mainFrame(wx.Frame):
         self.mainSizer.Layout()
 
     def on_verify(self, e):
-        pass
+        print 1
 
 
 def main():
