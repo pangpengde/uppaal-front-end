@@ -1,10 +1,8 @@
 # coding: utf-8
 
-from xml.etree import ElementTree as et
-
 from model.Template import Template
 from model.UserInput import UserInput
-from model.Processor import Processor
+
 
 class TemplateAnalyse(object):
 
@@ -15,9 +13,17 @@ class TemplateAnalyse(object):
     p = 0
 
     def __init__(self):
-        self.user_input = UserInput()
-        self.user_input.test()
+        # self.user_input = UserInput()
+        # self.user_input.test()
         self.template = Template()
+
+    def get_ui(self):
+        return self.user_input
+
+    def get_template(self):
+        return self.template
+
+    def init_template(self):
         for task in self.user_input.tasks:
             self.n += 1
             temp = []
@@ -38,12 +44,6 @@ class TemplateAnalyse(object):
             self.template.set_stadep(t.t_id, pr.t_id)
         self.template.set_p(self.p)
         self.template.set_n(self.n)
-
-    def get_ui(self):
-        return self.user_input
-
-    def get_template(self):
-        return self.template
 
 if __name__ == '__main__':
     template = TemplateAnalyse()

@@ -16,13 +16,22 @@ class ModelGenerate(object):
     part2 = None
     # model global declaration
     part3 = None
-    ta = TemplateAnalyse()
-    ui = ta.get_ui()
-    template = ta.get_template()
-    procs = ui.get_processors()
-    bus = ui.get_bus()
+    ta = None
+    ui = None
+    template = None
+    procs = None
+    bus = None
 
     def __init__(self):
+        pass
+
+    def init_ta(self):
+        self.ui = self.ta.get_ui()
+        self.template = self.ta.get_template()
+        self.procs = self.ui.get_processors()
+        self.bus = self.ui.get_bus()
+
+    def genarate(self):
         self.set_part1()
         self.set_part2()
         self.set_part3()

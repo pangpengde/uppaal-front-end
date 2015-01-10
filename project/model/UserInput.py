@@ -29,9 +29,9 @@ class UserInput(object):
     def get_deps(self):
         return self.deps
 
-    def test(self):
+    """def test(self):
         # tid, i_offset, offset, bcet, wcet, deadline, period, pe
-        '''t1 = Task(0, 0, 2, 2, 18, 4, p1)
+        t1 = Task(0, 0, 2, 2, 18, 4, p1)
         self.tasks.append(t1)
         t2 = Task(1, 2, 1, 1, 17, 6, p2)
         self.tasks.append(t2)
@@ -49,7 +49,7 @@ class UserInput(object):
 
         # dep = (task, predecessor)
         dep1 = Dep(t2, t1)
-        self.deps.append(dep1)'''
+        self.deps.append(dep1)
         p1 = Processor(0, "RMS", True)
         p2 = Processor(1, "EDF", True)
         self.processors.append(p1)
@@ -67,4 +67,4 @@ class UserInput(object):
         self.bus = Bus(1, 1)
 
         dep1 = Dep(t3, t2)
-        self.deps.append(dep1)
+        self.deps.append(dep1)"""
