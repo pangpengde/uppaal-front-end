@@ -1,0 +1,13 @@
+windmill control system
+
+p1=Processor(0,"RMS",True)
+p2=Processor(1,EDF,True)
+
+t1 = Task(0,0,2,2,4,4,p1)
+t2 = Task(1,0,1,1,6,6,p1)
+t3 = Task(2,0,2,2,6,6,p2)
+t4 = Task(3,40,2,3,6,6,p2)
+
+bus = Bus(1,1)
+
+dep1 = Dep(t3, t2)
