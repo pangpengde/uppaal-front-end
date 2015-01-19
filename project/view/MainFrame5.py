@@ -1,7 +1,4 @@
 # coding:utf-8
-import cmd
-import os
-import sys
 import wx
 from model.Processor import Processor
 from model.Bus import Bus
@@ -35,6 +32,8 @@ class MainFrame(wx.Frame):
     # the result area
     resultSizer = None
     resultPanel = None
+    #temp xml panel
+    xmlPanel = None
 
     def __init__(self, parent, title):
         super(MainFrame, self).__init__(parent, title=title, size=(900, 600))
@@ -51,7 +50,6 @@ class MainFrame(wx.Frame):
         self.init_bus_panel()
         self.init_task_sizer()
         self.init_spec_task_panel()
-        self.init_resultpanel()
 
         self.verify_button = wx.Button(self.mainPanel, size=(70, -1), label="Verify!!")
         self.Bind(wx.EVT_BUTTON, self.on_verify, self.verify_button)
@@ -215,20 +213,7 @@ class MainFrame(wx.Frame):
         mg.ta = ta
         mg.init_ta()
         mg.genarate()
-        systemname = "model"
-        xml = file('../source/%s.xml' % systemname, 'r')
-        modelxml = xml.read()
-        xmltext = wx.TextCtrl(self.mainPanel, -1, str(modelxml), size=(800, 100), style=wx.TE_MULTILINE)
-        cmd = '../../uppaal-4.1.18/bin-Win32/verifyta.exe -qst 1 ../source/%s.xml ../source/model.q  1>..\
-        /source/%s.result 2>../source/%s.trace' % (systemname, systemname, systemname)
-        os.system(cmd)
-        resultfile = file('../source/%s.result' % systemname, 'r')
-        result = resultfile.read()
-        resulttext = wx.TextCtrl(self.mainPanel, -1, str(result), size=(800, 100), style=wx.TE_MULTILINE)
-        print result
-        self.mainSizer.Add(xmltext)
-        self.mainSizer.Add(resulttext)
-        self.mainSizer.Layout()
+
 
 
 

@@ -5,5 +5,9 @@ verifyta -qst 1 model.xml model.q 2>model.trace
 # result re-direct to model.result, counterexample re-direct to model.trace
 verifyta -qst 1 model.xml model.q 1>model.result 2>>model.trace
 
+verifyta -qst 1 model.xml model.q 1>model.result 2>model.trace  this one is ok
+
+..\..\uppaal-4.1.18\bin-Win32\verifyta.exe -qst 1 ..\source\model.xml ..\source\model.q  1>..\source\model.result 2>..\source\model.trace"
+
 # result & counterexample re-direct to model.trace
 verifyta -qst 1 model.xml model.q  1>model.trace 2>&1
