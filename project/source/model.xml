@@ -6,7 +6,7 @@
 //Config
 
 const int N = 1;
-const int P = 2;
+const int P = 1;
 
 const int MaxTime=500;
 const int BUFFERSIZE=30;//the maximu buffersize
@@ -85,7 +85,7 @@ const int [0,1] staDep[N][N]={
 	{0}
 };
 const task_t Tasks[N]={
-	{1,1,1,1,1,0}
+	{1,2,3,4,5,0}
 };</declaration>
 	<template>
 		<name x="9" y="9">Task</name>
@@ -638,8 +638,7 @@ forall(i:pid_t)cpuUsed[i]'==!empty(i)</label>
 	</template>
 	<system>// Place template instantiations here.
 const processors pes ={
-	{0,RMS,true},
-	{0,RMS,true},
+	{0,RMS,true}
 };
 bus = BUS(1,1);
 

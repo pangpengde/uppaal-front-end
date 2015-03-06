@@ -100,6 +100,7 @@ class ModelGenerate(object):
         ft4 = open('../source/t4.xml', 'r')
         t4 = ft4.read()
 
+        #project/source/
         modelxml = open('../source/model.xml', 'w')
 
         modelxml.write(t1)

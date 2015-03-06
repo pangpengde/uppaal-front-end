@@ -36,6 +36,9 @@ class MainFrame(wx.Frame):
     resultSizer = None
     resultPanel = None
 
+    showinuppaal = None
+    systemname = None
+
     def __init__(self, parent, title):
         super(MainFrame, self).__init__(parent, title=title, size=(900, 600))
         self.mainPanel = wx.Panel(self, size=(900, 600))
@@ -215,21 +218,32 @@ class MainFrame(wx.Frame):
         mg.ta = ta
         mg.init_ta()
         mg.genarate()
-        systemname = "model"
-        xml = file('../source/%s.xml' % systemname, 'r')
+        self.systemname = "model"
+        xml = file('../source/%s.xml' % self.systemname, 'r')
         modelxml = xml.read()
         xmltext = wx.TextCtrl(self.mainPanel, -1, str(modelxml), size=(800, 100), style=wx.TE_MULTILINE)
-        cmd = '../../uppaal-4.1.18/bin-Win32/verifyta.exe -qst 1 ../source/%s.xml ../source/model.q  1>..\
-        /source/%s.result 2>../source/%s.trace' % (systemname, systemname, systemname)
+        self.showinuppaal = wx.Button(self.mainPanel, size=(100, -1), label="Show in Uppaal")
+        self.showinuppaal.Bind(wx.EVT_BUTTON, self.on_showinuppaal, self.showinuppaal)
+        cmd = '../../uppaal-4.1.18/bin-Win32/verifyta.exe -qst 1 ../source/%s.xml ../source/%s.q  '\
+              % (self.systemname, self.systemname) + '1>../source/%s.result 2>../source/%s.trace'\
+                                                     % (self.systemname, self.systemname)
+        print cmd
         os.system(cmd)
-        resultfile = file('../source/%s.result' % systemname, 'r')
+        resultfile = file('../source/%s.result' % self.systemname, 'r')
         result = resultfile.read()
         resulttext = wx.TextCtrl(self.mainPanel, -1, str(result), size=(800, 100), style=wx.TE_MULTILINE)
-        print result
         self.mainSizer.Add(xmltext)
+        self.mainSizer.Add(self.showinuppaal)
         self.mainSizer.Add(resulttext)
         self.mainSizer.Layout()
 
+    def on_showinuppaal(self, e):
+        cmd1 = '../../uppaal-4.1.18/uppaal.jar ../source/model.xml '
+        print cmd1
+        #  % self.systemname
+        print 4
+        os.system(cmd1)
+        print 5
 
 
 class FirstSpecProcessor(wx.Panel):
