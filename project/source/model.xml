@@ -85,7 +85,7 @@ const int [0,1] staDep[N][N]={
 	{0}
 };
 const task_t Tasks[N]={
-	{1,2,3,4,5,0}
+	{1,1,4,4,4,0}
 };</declaration>
 	<template>
 		<name x="9" y="9">Task</name>
