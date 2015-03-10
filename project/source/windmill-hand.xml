@@ -6,7 +6,7 @@
 //Config
 
 const int N = 4;
-const int P = 1;
+const int P = 2;
 
 const int MaxTime=500;
 const int BUFFERSIZE=30;//the maximu buffersize
@@ -80,19 +80,19 @@ urgent broadcast chan urg;//used to performe urgent activate
 int[0,1] dynDep[N][N];
 //Config staDep and task
 //original tasks dependency;
+
 const int [0,1] staDep[N][N]={
 	{0,0,0,0},
 	{0,0,0,0},
-	{0,0,0,0},
+	{0,1,0,0},
 	{0,0,0,0}
 };
 const task_t Tasks[N]={
-	{0,1,1,1,1,0},
-	{1,1,2,3,4,0},
-	{2,2,3,4,5,0},
-	{3,3,3,4,4,0}
-};
-</declaration>
+	{0,2,2,4,4,0},
+	{0,1,1,6,6,0},
+	{0,2,2,6,6,1},
+	{40,2,3,6,6,1}
+};</declaration>
 	<template>
 		<name x="9" y="9">Task</name>
 		<parameter>const tid_t id</parameter>
@@ -642,10 +642,10 @@ forall(i:pid_t)cpuUsed[i]'==!empty(i)</label>
 		</location>
 		<init ref="id27"/>
 	</template>
-	<system>
-		
+	<system>// Place template instantiations here.
 const processors pes ={
-	{0,RMS,true}
+	{0,RMS,true},
+	{1,EDF,true}
 };
 bus = BUS(1,1);
 

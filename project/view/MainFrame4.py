@@ -200,17 +200,29 @@ class MainFrame(wx.Frame):
                                                   str(v.preemptCombo.GetValue())))
         userinput.bus = Bus(int(self.busPanel.edit_bcet.GetValue()),
                             int(self.busPanel.edit_wcet.GetValue()))
+        temp = 0
         for k, v in self.taskPanels.items():
-            userinput.tasks.append(Task(int(v.editTid.GetValue()),
-                                        int(v.editOffset.GetValue()),
-                                        int(v.editBcet.GetValue()),
-                                        int(v.editWcet.GetValue()),
-                                        int(v.editDeadline.GetValue()),
-                                        int(v.editPeriod.GetValue()),
-                                        userinput.processors[int(v.editProcessor.GetValue())]))
-            if len(v.editPre.GetValue()) != 0:
-                userinput.deps.append(Dep(userinput.tasks[int(v.editTid.GetValue())],
-                                          userinput.tasks[int(v.editPre.GetValue())]))
+            for k, v in self.taskPanels.items():
+                if int(v.editTid.GetValue()) == temp:
+                    userinput.tasks.append(Task(int(v.editTid.GetValue()),
+                                                int(v.editOffset.GetValue()),
+                                                int(v.editBcet.GetValue()),
+                                                int(v.editWcet.GetValue()),
+                                                int(v.editDeadline.GetValue()),
+                                                int(v.editPeriod.GetValue()),
+                                                userinput.processors[int(v.editProcessor.GetValue())]))
+                    if len(v.editPre.GetValue()) != 0:
+                        userinput.deps.append(Dep(userinput.tasks[int(v.editTid.GetValue())],
+                                                  userinput.tasks[int(v.editPre.GetValue())]))
+                    temp += 1
+                    continue
+
+            #test
+            '''print int(v.editTid.GetValue()), int(v.editOffset.GetValue()), int(v.editBcet.GetValue()), \
+                int(v.editWcet.GetValue()), int(v.editDeadline.GetValue()), int(v.editPeriod.GetValue()),\
+                int(v.editProcessor.GetValue())'''
+            #end
+
         ta = TemplateAnalyse()
         ta.user_input = userinput
         ta.init_template()

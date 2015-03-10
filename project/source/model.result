@@ -1,4 +1,3 @@
 
 Verifying property 1 at line 6
- -- Property MAY NOT be satisfied.
-Showing counter example.
+ -- Property is satisfied.

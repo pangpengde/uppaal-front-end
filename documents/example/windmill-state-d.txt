@@ -1,0 +1,309 @@
+State:
+( Task(0).Initial Task(1).Initial Task(2).Initial Task(3).Initial DepManager.Idle bus.Init scheduler.Init policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  DepManager.Idle->DepManager.InUse
+
+  State:
+( Task(0).Initial Task(1).Initial Task(2).Initial Task(3).Initial DepManager.InUse bus.Init scheduler.Init policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  bus.Init->bus.Idle 
+
+  State:
+( Task(0).Initial Task(1).Initial Task(2).Initial Task(3).Initial DepManager.InUse bus.Idle scheduler.Init policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  scheduler.Init->scheduler.Idle
+
+  State:
+( Task(0).Initial Task(1).Initial Task(2).Initial Task(3).Initial DepManager.InUse bus.Idle scheduler.Idle policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  Task(0).Initial->Task(0).WaitingDepedency
+  DepManager.InUse->DepManager.InUse
+
+  State:
+( Task(0).WaitingDepedency Task(1).Initial Task(2).Initial Task(3).Initial DepManager.InUse bus.Idle scheduler.Idle policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  Task(2).Initial->Task(2).WaitingDepedency 
+  DepManager.InUse->DepManager.InUse
+
+  State:
+( Task(0).WaitingDepedency Task(1).Initial Task(2).WaitingDepedency Task(3).Initial DepManager.InUse bus.Idle scheduler.Idle policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  Task(3).Initial->Task(3).WaitingDepedency
+  DepManager.InUse->DepManager.InUse
+
+  State:
+( Task(0).WaitingDepedency Task(1).Initial Task(2).WaitingDepedency Task(3).WaitingDepedency DepManager.InUse bus.Idle scheduler.Idle policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  DepManager.InUse->DepManager.DepAck
+
+  State:
+( Task(0).WaitingDepedency Task(1).Initial Task(2).WaitingDepedency Task(3).WaitingDepedency DepManager.DepAck bus.Idle scheduler.Idle policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  DepManager.DepAck->DepManager.InUse
+  Task(0).WaitingDepedency->Task(0).DependencyResolved 
+
+  State:
+( Task(0).DependencyResolved Task(1).Initial Task(2).WaitingDepedency Task(3).WaitingDepedency DepManager.InUse bus.Idle scheduler.Idle policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  Task(0).DependencyResolved->Task(0).Ready 
+  scheduler.Idle->scheduler.Received 
+
+  State:
+( Task(0).Ready Task(1).Initial Task(2).WaitingDepedency Task(3).WaitingDepedency DepManager.InUse bus.Idle scheduler.Received policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  scheduler.Received->scheduler.WaitPolicy
+  policy_RMS.Idle->policy_RMS.Inserted
+
+  State:
+( Task(0).Ready Task(1).Initial Task(2).WaitingDepedency Task(3).WaitingDepedency DepManager.InUse bus.Idle scheduler.WaitPolicy policy_EDF.Idle policy_RMS.Inserted Global._id27 )
+
+Transitions:
+  policy_RMS.Inserted->policy_RMS.Idle
+  scheduler.WaitPolicy->scheduler.Inserted 
+
+  State:
+( Task(0).Ready Task(1).Initial Task(2).WaitingDepedency Task(3).WaitingDepedency DepManager.InUse bus.Idle scheduler.Inserted policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  scheduler.Inserted->scheduler._id16 
+
+  State:
+( Task(0).Ready Task(1).Initial Task(2).WaitingDepedency Task(3).WaitingDepedency DepManager.InUse bus.Idle scheduler._id16 policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  scheduler._id16->scheduler.Idle
+  Task(0).Ready->Task(0).Running
+
+State:
+( Task(0).Running Task(1).Initial Task(2).WaitingDepedency Task(3).WaitingDepedency DepManager.InUse bus.Idle scheduler.Idle policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  DepManager.InUse->DepManager.DepAck
+
+  State:
+( Task(0).Running Task(1).Initial Task(2).WaitingDepedency Task(3).WaitingDepedency DepManager.DepAck bus.Idle scheduler.Idle policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  DepManager.DepAck->DepManager.InUse
+  Task(3).WaitingDepedency->Task(3).DependencyResolved
+
+  State:
+( Task(0).Running Task(1).Initial Task(2).WaitingDepedency Task(3).DependencyResolved DepManager.InUse bus.Idle scheduler.Idle policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  Task(3).DependencyResolved->Task(3).Ready
+  scheduler.Idle->scheduler.Received
+
+  State:
+( Task(0).Running Task(1).Initial Task(2).WaitingDepedency Task(3).Ready DepManager.InUse bus.Idle scheduler.Received policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  scheduler.Received->scheduler.WaitPolicy
+  policy_RMS.Idle->policy_RMS.Inserted 
+
+  State:
+( Task(0).Running Task(1).Initial Task(2).WaitingDepedency Task(3).Ready DepManager.InUse bus.Idle scheduler.WaitPolicy policy_EDF.Idle policy_RMS.Inserted Global._id27 )
+
+
+Transitions:
+  policy_RMS.Inserted->policy_RMS.Idle
+  scheduler.WaitPolicy->scheduler.Inserted
+
+  State:
+( Task(0).Running Task(1).Initial Task(2).WaitingDepedency Task(3).Ready DepManager.InUse bus.Idle scheduler.Inserted policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  scheduler.Inserted->scheduler.Idle
+
+  State:
+( Task(0).Running Task(1).Initial Task(2).WaitingDepedency Task(3).Ready DepManager.InUse bus.Idle scheduler.Idle policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Delay: 2
+
+State:
+( Task(0).Running Task(1).Initial Task(2).WaitingDepedency Task(3).Ready DepManager.InUse bus.Idle scheduler.Idle policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  Task(0).Running->Task(0).Finish
+  DepManager.InUse->DepManager.InUse
+  scheduler.Idle->scheduler.Finish
+
+  State:
+( Task(0).Finish Task(1).Initial Task(2).WaitingDepedency Task(3).Ready DepManager.InUse bus.Idle scheduler.Finish policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  scheduler.Finish->scheduler.Idle
+  Task(3).Ready->Task(3).Running 
+
+State:
+( Task(0).Finish Task(1).Initial Task(2).WaitingDepedency Task(3).Running DepManager.InUse bus.Idle scheduler.Idle policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Delay: 1
+
+State:
+( Task(0).Finish Task(1).Initial Task(2).WaitingDepedency Task(3).Running DepManager.InUse bus.Idle scheduler.Idle policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  Task(3).Running->Task(3).Finish
+  DepManager.InUse->DepManager.InUse
+  scheduler.Idle->scheduler.Finish
+
+  State:
+( Task(0).Finish Task(1).Initial Task(2).WaitingDepedency Task(3).Finish DepManager.InUse bus.Idle scheduler.Finish policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  scheduler.Finish->scheduler.Idle 
+
+  State:
+( Task(0).Finish Task(1).Initial Task(2).WaitingDepedency Task(3).Finish DepManager.InUse bus.Idle scheduler.Idle policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  bus.Idle->bus.InUse
+
+  State:
+( Task(0).Finish Task(1).Initial Task(2).WaitingDepedency Task(3).Finish DepManager.InUse bus.InUse scheduler.Idle policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Delay: 1
+
+State:
+( Task(0).Finish Task(1).Initial Task(2).WaitingDepedency Task(3).Finish DepManager.InUse bus.InUse scheduler.Idle policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  bus.InUse->bus.Received
+
+  State:
+( Task(0).Finish Task(1).Initial Task(2).WaitingDepedency Task(3).Finish DepManager.InUse bus.Received scheduler.Idle policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  bus.Received->bus.Idle 
+
+  State:
+( Task(0).Finish Task(1).Initial Task(2).WaitingDepedency Task(3).Finish DepManager.InUse bus.Idle scheduler.Idle policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  Task(0).Finish->Task(0).WaitingDepedency
+  DepManager.InUse->DepManager.InUse
+
+State:
+( Task(0).WaitingDepedency Task(1).Initial Task(2).WaitingDepedency Task(3).Finish DepManager.InUse bus.Idle scheduler.Idle policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  DepManager.InUse->DepManager.DepAck
+
+  State:
+( Task(0).WaitingDepedency Task(1).Initial Task(2).WaitingDepedency Task(3).Finish DepManager.DepAck bus.Idle scheduler.Idle policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  DepManager.DepAck->DepManager.InUse
+  Task(2).WaitingDepedency->Task(2).DependencyResolved
+
+  State:
+( Task(0).WaitingDepedency Task(1).Initial Task(2).DependencyResolved Task(3).Finish DepManager.InUse bus.Idle scheduler.Idle policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  Task(2).DependencyResolved->Task(2).Ready
+  scheduler.Idle->scheduler.Received 
+
+  State:
+( Task(0).WaitingDepedency Task(1).Initial Task(2).Ready Task(3).Finish DepManager.InUse bus.Idle scheduler.Received policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  scheduler.Received->scheduler.WaitPolicy
+  policy_EDF.Idle->policy_EDF.Iteration
+
+State:
+( Task(0).WaitingDepedency Task(1).Initial Task(2).Ready Task(3).Finish DepManager.InUse bus.Idle scheduler.WaitPolicy policy_EDF.Iteration policy_RMS.Idle Global._id27 )
+
+Transitions:
+  policy_EDF.Iteration->policy_EDF.Inserted 
+
+  State:
+( Task(0).WaitingDepedency Task(1).Initial Task(2).Ready Task(3).Finish DepManager.InUse bus.Idle scheduler.WaitPolicy policy_EDF.Inserted policy_RMS.Idle Global._id27 )
+
+Transitions:
+  policy_EDF.Inserted->policy_EDF.Idle
+  scheduler.WaitPolicy->scheduler.Inserted
+
+State:
+( Task(0).WaitingDepedency Task(1).Initial Task(2).Ready Task(3).Finish DepManager.InUse bus.Idle scheduler.Inserted policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  scheduler.Inserted->scheduler._id16 
+
+  State:
+( Task(0).WaitingDepedency Task(1).Initial Task(2).Ready Task(3).Finish DepManager.InUse bus.Idle scheduler._id16 policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  scheduler._id16->scheduler.Idle
+  Task(2).Ready->Task(2).Running 
+
+State:
+( Task(0).WaitingDepedency Task(1).Initial Task(2).Running Task(3).Finish DepManager.InUse bus.Idle scheduler.Idle policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  DepManager.InUse->DepManager.DepAck 
+
+  State:
+( Task(0).WaitingDepedency Task(1).Initial Task(2).Running Task(3).Finish DepManager.DepAck bus.Idle scheduler.Idle policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  DepManager.DepAck->DepManager.InUse
+  Task(0).WaitingDepedency->Task(0).DependencyResolved 
+
+State:
+( Task(0).DependencyResolved Task(1).Initial Task(2).Running Task(3).Finish DepManager.InUse bus.Idle scheduler.Idle policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  Task(0).DependencyResolved->Task(0).Ready
+  scheduler.Idle->scheduler.Received
+
+  State:
+( Task(0).Ready Task(1).Initial Task(2).Running Task(3).Finish DepManager.InUse bus.Idle scheduler.Received policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  scheduler.Received->scheduler.WaitPolicy 
+  policy_RMS.Idle->policy_RMS.Inserted
+
+  State:
+( Task(0).Ready Task(1).Initial Task(2).Running Task(3).Finish DepManager.InUse bus.Idle scheduler.WaitPolicy policy_EDF.Idle policy_RMS.Inserted Global._id27 )
+
+Transitions:
+  policy_RMS.Inserted->policy_RMS.Idle
+  scheduler.WaitPolicy->scheduler.Inserted
+
+  State:
+( Task(0).Ready Task(1).Initial Task(2).Running Task(3).Finish DepManager.InUse bus.Idle scheduler.Inserted policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  scheduler.Inserted->scheduler._id16 
+
+  State:
+( Task(0).Ready Task(1).Initial Task(2).Running Task(3).Finish DepManager.InUse bus.Idle scheduler._id16 policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  scheduler._id16->scheduler.Idle
+  Task(0).Ready->Task(0).Running 
+
+  State:
+( Task(0).Running Task(1).Initial Task(2).Running Task(3).Finish DepManager.InUse bus.Idle scheduler.Idle policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Delay: 2
+
+State:
+( Task(0).Running Task(1).Initial Task(2).Running Task(3).Finish DepManager.InUse bus.Idle scheduler.Idle policy_EDF.Idle policy_RMS.Idle Global._id27 )
+
+Transitions:
+  Task(2).Running->Task(2).Error
+
+  State:
+( Task(0).Running Task(1).Initial Task(2).Error Task(3).Finish DepManager.InUse bus.Idle scheduler.Idle policy_EDF.Idle policy_RMS.Idle Global._id27 )

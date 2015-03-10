@@ -6,7 +6,7 @@
 //Config
 
 const int N = 4;
-const int P = 1;
+const int P = 2;
 
 const int MaxTime=500;
 const int BUFFERSIZE=30;//the maximu buffersize
@@ -80,19 +80,19 @@ urgent broadcast chan urg;//used to performe urgent activate
 int[0,1] dynDep[N][N];
 //Config staDep and task
 //original tasks dependency;
+
 const int [0,1] staDep[N][N]={
 	{0,0,0,0},
 	{0,0,0,0},
-	{0,0,0,0},
+	{0,0,0,1},
 	{0,0,0,0}
 };
 const task_t Tasks[N]={
-	{0,1,1,1,1,0},
-	{1,1,2,3,4,0},
-	{2,2,3,4,5,0},
-	{3,3,3,4,4,0}
-};
-</declaration>
+	{0,2,2,4,4,0},
+	{40,2,3,6,6,1},
+	{0,2,2,6,6,1},
+	{0,1,1,6,6,0}
+};</declaration>
 	<template>
 		<name x="9" y="9">Task</name>
 		<parameter>const tid_t id</parameter>
@@ -104,18 +104,18 @@ time_t DeadLine(){return Tasks[id].deadline;}
 time_t Period(){ return Tasks[id].period;}</declaration>
 		<location id="id0" x="-314" y="-34">
 			<name x="-324" y="-68">Ready</name>
-			<label kind="invariant" x="-365" y="-17">time[id]&lt;=DeadLine()</label>
+			<label kind="invariant" x="-391" y="-17">time[id]&lt;=Period()</label>
 		</location>
 		<location id="id1" x="-518" y="-221">
 			<name x="-569" y="-229">Error</name>
 		</location>
 		<location id="id2" x="-654" y="-127">
 			<name x="-637" y="-136">Finish</name>
-			<label kind="invariant" x="-705" y="-119">time[id]&lt;=Period()</label>
+			<label kind="invariant" x="-646" y="-110">time[id]&lt;=Period()</label>
 		</location>
 		<location id="id3" x="-518" y="-34">
 			<name x="-509" y="-68">Running</name>
-			<label kind="invariant" x="-569" y="-25">exec[id]&lt;=Wcet()</label>
+			<label kind="invariant" x="-637" y="-17">exec[id]&lt;=Wcet()&amp;&amp;time[id]&lt;=Period()</label>
 		</location>
 		<location id="id4" x="-314" y="-230">
 			<name x="-425" y="-221">DependencyResolved</name>
@@ -133,7 +133,7 @@ time_t Period(){ return Tasks[id].period;}</declaration>
 		<transition>
 			<source ref="id0"/>
 			<target ref="id1"/>
-			<label kind="guard" x="-467" y="-178">time[id]&gt;DeadLine()</label>
+			<label kind="guard" x="-467" y="-178">time[id]&gt;=DeadLine()</label>
 		</transition>
 		<transition>
 			<source ref="id3"/>
@@ -152,17 +152,17 @@ time_t Period(){ return Tasks[id].period;}</declaration>
 		<transition>
 			<source ref="id4"/>
 			<target ref="id0"/>
-			<label kind="synchronisation" x="-357" y="-136">check_pe[id]!</label>
+			<label kind="synchronisation" x="-365" y="-119">check_pe[id]!</label>
 		</transition>
 		<transition>
 			<source ref="id3"/>
 			<target ref="id1"/>
-			<label kind="guard" x="-561" y="-127">time[id]&gt;DeadLine()</label>
+			<label kind="guard" x="-561" y="-127">time[id]&gt;=DeadLine()</label>
 		</transition>
 		<transition>
 			<source ref="id5"/>
 			<target ref="id1"/>
-			<label kind="guard" x="-552" y="-289">time[id]&gt;DeadLine()</label>
+			<label kind="guard" x="-552" y="-289">time[id]&gt;=DeadLine()</label>
 		</transition>
 		<transition>
 			<source ref="id2"/>
@@ -179,7 +179,7 @@ released[id]=1</label>
 		<transition>
 			<source ref="id3"/>
 			<target ref="id2"/>
-			<label kind="guard" x="-646" y="-93">exec[id]&gt;=Bcet()&amp;&amp;time[id]&lt;=DeadLine()</label>
+			<label kind="guard" x="-646" y="-93">exec[id]&gt;=Bcet()</label>
 			<label kind="synchronisation" x="-637" y="-34">finish[id]!</label>
 			<label kind="assignment" x="-646" y="-76">released[id]=0,
 running[id]=0</label>
@@ -642,10 +642,10 @@ forall(i:pid_t)cpuUsed[i]'==!empty(i)</label>
 		</location>
 		<init ref="id27"/>
 	</template>
-	<system>
-		
+	<system>// Place template instantiations here.
 const processors pes ={
-	{0,RMS,true}
+	{0,RMS,true},
+	{1,EDF,true}
 };
 bus = BUS(1,1);
 

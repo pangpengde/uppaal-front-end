@@ -71,4 +71,3 @@ urgent broadcast chan urg;//used to performe urgent activate
 int[0,1] dynDep[N][N];
 //Config staDep and task
 //original tasks dependency;
-
