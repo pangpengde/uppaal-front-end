@@ -5,8 +5,8 @@
 // Place global declarations here.
 //Config
 
-const int N = 4;
-const int P = 1;
+const int N = 5;
+const int P = 3;
 
 const int MaxTime=500;
 const int BUFFERSIZE=30;//the maximu buffersize
@@ -81,16 +81,18 @@ int[0,1] dynDep[N][N];
 //Config staDep and task
 //original tasks dependency;
 const int [0,1] staDep[N][N]={
-	{0,0,0,0},
-	{0,0,0,0},
-	{0,0,0,0},
-	{0,0,0,0}
+	{0,0,0,0,0},
+	{1,0,0,0,0},
+	{0,0,0,0,0},
+	{0,0,1,0,0},
+	{0,0,0,1,0}
 };
 const task_t Tasks[N]={
-	{0,1,1,1,1,0},
-	{1,1,2,3,4,0},
-	{2,2,3,4,5,0},
-	{3,3,3,4,4,0}
+	{0,1,2,3,3,0},
+	{0,1,1,3,3,1},
+	{0,1,1,3,3,2},
+	{0,1,1,3,3,1},
+	{0,1,1,3,3,2}
 };
 </declaration>
 	<template>
@@ -645,9 +647,11 @@ forall(i:pid_t)cpuUsed[i]'==!empty(i)</label>
 	<system>
 		
 const processors pes ={
-	{0,RMS,true}
+	{0,RMS,true},
+	{1,RMS,true},
+	{2,RMS,true}
 };
-bus = BUS(1,1);
+bus = BUS(0,0);
 
 
 scheduler=Scheduler(pes);

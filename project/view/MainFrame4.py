@@ -11,6 +11,7 @@ from model.Template import Template
 from model.UserInput import UserInput
 from controller.TemplateAnalyse import TemplateAnalyse
 from controller.ModelGenerate import ModelGenerate
+from controller.ResultAnalyse import ResultAnalyse
 
 class MainFrame(wx.Frame):
     mainSizer = None
@@ -194,14 +195,18 @@ class MainFrame(wx.Frame):
 
     def on_verify(self, e):
         userinput = UserInput()
-        for k, v in self.processorPanels.items():
-            userinput.processors.append(Processor(int(v.editPname.GetValue()),
-                                                  str(v.policyCombo.GetValue()),
-                                                  str(v.preemptCombo.GetValue())))
+        temp = 0
+        for a, b in self.processorPanels.items():
+            for k, v in self.processorPanels.items():
+                if int(v.editPname.GetValue()) == temp:
+                    userinput.processors.append(Processor(int(v.editPname.GetValue()),
+                                                          str(v.policyCombo.GetValue()),
+                                                          str(v.preemptCombo.GetValue())))
+                    temp += 1
         userinput.bus = Bus(int(self.busPanel.edit_bcet.GetValue()),
                             int(self.busPanel.edit_wcet.GetValue()))
         temp = 0
-        for k, v in self.taskPanels.items():
+        for a, b in self.taskPanels.items():
             for k, v in self.taskPanels.items():
                 if int(v.editTid.GetValue()) == temp:
                     userinput.tasks.append(Task(int(v.editTid.GetValue()),
@@ -216,13 +221,6 @@ class MainFrame(wx.Frame):
                                                   userinput.tasks[int(v.editPre.GetValue())]))
                     temp += 1
                     continue
-
-            #test
-            '''print int(v.editTid.GetValue()), int(v.editOffset.GetValue()), int(v.editBcet.GetValue()), \
-                int(v.editWcet.GetValue()), int(v.editDeadline.GetValue()), int(v.editPeriod.GetValue()),\
-                int(v.editProcessor.GetValue())'''
-            #end
-
         ta = TemplateAnalyse()
         ta.user_input = userinput
         ta.init_template()
@@ -240,9 +238,10 @@ class MainFrame(wx.Frame):
               % (self.systemname, self.systemname) + '1>..\\source\\%s.result 2>..\\source\\%s.trace'\
                                                      % (self.systemname, self.systemname)
         os.system(cmd)
-        resultfile = file('../source/%s.result' % self.systemname, 'r')
-        result = resultfile.read()
-        resulttext = wx.TextCtrl(self.mainPanel, -1, str(result), size=(800, 100), style=wx.TE_MULTILINE)
+        # resultfile = file('../source/%s.result' % self.systemname, 'r')
+        # result = resultfile.read()
+        ra = ResultAnalyse()
+        resulttext = wx.TextCtrl(self.mainPanel, -1, str(ra.resultToShow), size=(800, 100), style=wx.TE_MULTILINE)
         self.mainSizer.Add(xmltext)
         self.mainSizer.Add(self.showinuppaal)
         self.mainSizer.Add(resulttext)
