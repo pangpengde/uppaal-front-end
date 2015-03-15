@@ -37,13 +37,18 @@ class MainFrame(wx.Frame):
     resultSizer = None
     resultPanel = None
 
+    xmltext = None
     showinuppaal = None
     systemname = None
+    resulttext = None
 
     def __init__(self, parent, title):
-        super(MainFrame, self).__init__(parent, title=title, size=(900, 600))
-        self.mainPanel = wx.Panel(self, size=(900, 600))
+        super(MainFrame, self).__init__(parent, title=title, size=(800, 700))
+        # TODO can not auto visiable scrollerbar
+        self.mainPanel = wx.ScrolledWindow(self, -1)
+        self.mainPanel.SetScrollbars(1, 1, 20, 20)
         self.mainSizer = wx.BoxSizer(wx.VERTICAL)
+        # menus
         self.init_filemenu()
         self.init_aboutmenu()
         self.init_menubar()
@@ -60,7 +65,7 @@ class MainFrame(wx.Frame):
         self.verify_button = wx.Button(self.mainPanel, size=(70, -1), label="Verify!!")
         self.Bind(wx.EVT_BUTTON, self.on_verify, self.verify_button)
         self.mainSizer.Add(self.specSizer)
-        self.mainSizer.Add(self.verify_button)
+        self.mainSizer.Add(self.verify_button, flag=wx.LEFT|wx.TOP, border=10)
         self.mainSizer.Add(self.resultSizer)
         self.mainPanel.SetSizerAndFit(self.mainSizer)
 
@@ -86,70 +91,66 @@ class MainFrame(wx.Frame):
     def init_spec_sizer(self):
         self.specSizer = wx.BoxSizer(wx.VERTICAL)
         st = wx.StaticText(self.mainPanel, label="System Specification")
-        self.specSizer.Add(st)
+        self.specSizer.Add(st, flag=wx.ALL, border=10)
 
     def init_pro_sizer(self):
-        self.proSizer = wx.BoxSizer(wx.VERTICAL)
+        processor = wx.StaticBox(self.mainPanel, label="Processors:")
+        self.proSizer = wx.StaticBoxSizer(processor, wx.VERTICAL)
         h_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        processor = wx.StaticText(self.mainPanel, label="Processors: ")
-        h_sizer.Add(processor)
         self.proAddButton = wx.Button(self.mainPanel, size=(70, -1), label="Add")
         self.proAddButton.Bind(wx.EVT_BUTTON, self.on_pro_add_button, self.proAddButton)
-        h_sizer.Add(self.proAddButton)
+        h_sizer.Add(self.proAddButton, flag=wx.LEFT, border=10)
         h_text_sizer = wx.BoxSizer(wx.HORIZONTAL)
         pName = wx.StaticText(self.mainPanel, label="p_id: ", size=(70, -1))
-        h_text_sizer.Add(pName)
+        h_text_sizer.Add(pName, flag=wx.LEFT, border=10)
         policy = wx.StaticText(self.mainPanel, label="policy: ", size=(70, -1))
-        h_text_sizer.Add(policy)
-        preempt = wx.StaticText(self.mainPanel, label="preemptible?: ", size=(70, -1))
-        h_text_sizer.Add(preempt)
+        h_text_sizer.Add(policy, flag=wx.LEFT, border=10)
+        preempt = wx.StaticText(self.mainPanel, label="preemptible:", size=(90, -1))
+        h_text_sizer.Add(preempt, flag=wx.LEFT, border=10)
         self.proSizer.Add(h_sizer)
         self.proSizer.Add(h_text_sizer)
 
     def init_spec_propanel(self):
         self.processorPanels[0] = FirstSpecProcessor(self.mainPanel)
-        self.proSizer.Add(self.processorPanels[0])
+        self.proSizer.Add(self.processorPanels[0], flag=wx.TOP, border=10)
         self.specSizer.Add(self.proSizer)
 
     def init_bus_panel(self):
-        self.busSizer = wx.BoxSizer(wx.VERTICAL)
-        bus = wx.StaticText(self.mainPanel, label="Bus:")
-        self.busSizer.Add(bus)
+        bus = wx.StaticBox(self.mainPanel, label="Bus:")
+        self.busSizer = wx.StaticBoxSizer(bus, wx.VERTICAL)
         text_sizer = wx.BoxSizer(wx.HORIZONTAL)
         bcet = wx.StaticText(self.mainPanel, label="bcet: ", size=(70, -1))
+        text_sizer.Add(bcet, flag=wx.LEFT, border=10)
         wcet = wx.StaticText(self.mainPanel, label="wcet: ", size=(70, -1))
-        text_sizer.AddMany([bcet, wcet])
+        text_sizer.Add(wcet, flag=wx.LEFT, border=10)
         self.busSizer.Add(text_sizer)
         self.busPanel = BusPanel(self.mainPanel)
         self.busSizer.Add(self.busPanel)
         self.specSizer.Add(self.busSizer)
 
     def init_task_sizer(self):
-        self.taskSizer = wx.BoxSizer(wx.VERTICAL)
-        task = wx.StaticText(self.mainPanel, label="Task:", size=(70, -1))
-        h_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        h_sizer.Add(task)
+        task = wx.StaticBox(self.mainPanel, label="Task:", size=(70, -1))
+        self.taskSizer = wx.StaticBoxSizer(task, wx.VERTICAL)
         self.taskAddButton = wx.Button(self.mainPanel, size=(70, -1), label="Add")
         self.taskAddButton.Bind(wx.EVT_BUTTON, self.on_task_add_button, self.taskAddButton)
-        h_sizer.Add(self.taskAddButton)
-        self.taskSizer.Add(h_sizer)
+        self.taskSizer.Add(self.taskAddButton, flag=wx.LEFT, border=10)
         h_text_sizer = wx.BoxSizer(wx.HORIZONTAL)
         tname = wx.StaticText(self.mainPanel, label="t_id:", size=(70, -1))
-        h_text_sizer.Add(tname)
+        h_text_sizer.Add(tname, flag=wx.LEFT, border=10)
         offset = wx.StaticText(self.mainPanel, label="offset: ", size=(70, -1))
-        h_text_sizer.Add(offset)
+        h_text_sizer.Add(offset, flag=wx.LEFT, border=10)
         bcet = wx.StaticText(self.mainPanel, label="bcet: ", size=(70, -1))
-        h_text_sizer.Add(bcet)
+        h_text_sizer.Add(bcet, flag=wx.LEFT, border=10)
         wcet = wx.StaticText(self.mainPanel, label="wcet: ", size=(70, -1))
-        h_text_sizer.Add(wcet)
+        h_text_sizer.Add(wcet, flag=wx.LEFT, border=10)
         deadline = wx.StaticText(self.mainPanel, label="deadline: ", size=(70, -1))
-        h_text_sizer.Add(deadline)
+        h_text_sizer.Add(deadline, flag=wx.LEFT, border=10)
         period = wx.StaticText(self.mainPanel, label="period: ", size=(70, -1))
-        h_text_sizer.Add(period)
+        h_text_sizer.Add(period, flag=wx.LEFT, border=10)
         processor = wx.StaticText(self.mainPanel, label="processor: ", size=(70, -1))
-        h_text_sizer.Add(processor)
+        h_text_sizer.Add(processor, flag=wx.LEFT, border=10)
         predecessor = wx.StaticText(self.mainPanel, label="predeccesor: ", size=(80, -1))
-        h_text_sizer.Add(predecessor)
+        h_text_sizer.Add(predecessor, flag=wx.LEFT, border=10)
         self.taskSizer.Add(h_text_sizer)
 
     def init_spec_task_panel(self):
@@ -177,7 +178,7 @@ class MainFrame(wx.Frame):
         temp = SpecProcessor(self.mainPanel)
         self.processorPanels[temp.proDelButton] = temp
         temp.proDelButton.Bind(wx.EVT_BUTTON, self.on_pro_del_button, temp.proDelButton)
-        self.proSizer.Add(temp)
+        self.proSizer.Add(temp, flag=wx.TOP, border=10)
         self.mainSizer.Layout()
 
     def on_task_del_button(self, e):
@@ -190,7 +191,7 @@ class MainFrame(wx.Frame):
         temp = TaskPanel(self.mainPanel)
         self.taskPanels[temp.taskDelButton] = temp
         temp.taskDelButton.Bind(wx.EVT_BUTTON, self.on_task_del_button, temp.taskDelButton)
-        self.taskSizer.Add(temp)
+        self.taskSizer.Add(temp, flag=wx.TOP, border=10)
         self.mainSizer.Layout()
 
     def on_verify(self, e):
@@ -231,9 +232,16 @@ class MainFrame(wx.Frame):
         self.systemname = "model"
         xml = file('../source/%s.xml' % self.systemname, 'r')
         modelxml = xml.read()
-        xmltext = wx.TextCtrl(self.mainPanel, -1, str(modelxml), size=(800, 100), style=wx.TE_MULTILINE)
-        self.showinuppaal = wx.Button(self.mainPanel, size=(100, -1), label="Show in Uppaal")
-        self.showinuppaal.Bind(wx.EVT_BUTTON, self.on_showinuppaal, self.showinuppaal)
+        if self.xmltext == None:
+            self.xmltext = wx.TextCtrl(self.mainPanel, -1, str(modelxml), size=(700, 100), style=wx.TE_MULTILINE)
+            self.mainSizer.Add(self.xmltext, flag=wx.LEFT|wx.TOP, border=10)
+        else:
+            self.xmltext.SetValue(str(modelxml))
+        if self.showinuppaal == None:
+            self.showinuppaal = wx.Button(self.mainPanel, size=(100, -1), label="Show in Uppaal")
+            self.showinuppaal.Bind(wx.EVT_BUTTON, self.on_showinuppaal, self.showinuppaal)
+            self.mainSizer.Add(self.showinuppaal, flag=wx.LEFT|wx.TOP, border=10)
+
         cmd = '..\\..\\uppaal-4.1.18\\bin-Win32\\verifyta.exe -qst 1 ..\\source\\%s.xml ..\\source\\%s.q '\
               % (self.systemname, self.systemname) + '1>..\\source\\%s.result 2>..\\source\\%s.trace'\
                                                      % (self.systemname, self.systemname)
@@ -241,10 +249,12 @@ class MainFrame(wx.Frame):
         # resultfile = file('../source/%s.result' % self.systemname, 'r')
         # result = resultfile.read()
         ra = ResultAnalyse()
-        resulttext = wx.TextCtrl(self.mainPanel, -1, str(ra.resultToShow), size=(800, 100), style=wx.TE_MULTILINE)
-        self.mainSizer.Add(xmltext)
-        self.mainSizer.Add(self.showinuppaal)
-        self.mainSizer.Add(resulttext)
+        if self.resulttext == None:
+            self.resulttext = wx.TextCtrl(self.mainPanel, -1, str(ra.resultToShow), size=(700, 100), style=wx.TE_MULTILINE)
+            self.mainSizer.Add(self.resulttext, flag=wx.LEFT|wx.TOP, border=10)
+        else:
+            self.resulttext.SetValue(str(ra.resultToShow))
+
         self.mainSizer.Layout()
 
     def on_showinuppaal(self, e):
@@ -264,13 +274,13 @@ class FirstSpecProcessor(wx.Panel):
         wx.Panel.__init__(self, parent)
         self.processorSizer = wx.BoxSizer(wx.HORIZONTAL)
         self.editPname = wx.TextCtrl(self, size=(70, -1))
-        self.processorSizer.Add(self.editPname)
+        self.processorSizer.Add(self.editPname, flag=wx.LEFT, border=10)
 
-        self.policyCombo = wx.ComboBox(self, -1, size=(70, -1), value="", choices=self.policyList, style=wx.CB_DROPDOWN)
-        self.processorSizer.Add(self.policyCombo)
+        self.policyCombo = wx.ComboBox(self, -1, size=(70, -1), value=self.policyList[0], choices=self.policyList, style=wx.CB_DROPDOWN)
+        self.processorSizer.Add(self.policyCombo, flag=wx.LEFT, border=10)
 
-        self.preemptCombo = wx.ComboBox(self, -1, size=(70, -1), value="", choices=self.preemptList, style=wx.CB_DROPDOWN)
-        self.processorSizer.Add(self.preemptCombo)
+        self.preemptCombo = wx.ComboBox(self, -1, size=(70, -1), value=self.preemptList[0], choices=self.preemptList, style=wx.CB_DROPDOWN)
+        self.processorSizer.Add(self.preemptCombo, flag=wx.LEFT, border=10)
         self.SetSizerAndFit(self.processorSizer)
 
 
@@ -280,7 +290,7 @@ class SpecProcessor(FirstSpecProcessor):
     def __init__(self, parent):
         FirstSpecProcessor.__init__(self, parent)
         self.proDelButton = wx.Button(self, size=(70, -1), label="Delete")
-        self.processorSizer.Add(self.proDelButton)
+        self.processorSizer.Add(self.proDelButton, flag=wx.LEFT, border=15)
         self.SetSizerAndFit(self.processorSizer)
 
 
@@ -293,9 +303,9 @@ class BusPanel(wx.Panel):
         wx.Panel.__init__(self, parent)
         self.sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.edit_bcet = wx.TextCtrl(self, size=(70, -1))
-        self.sizer.Add(self.edit_bcet)
+        self.sizer.Add(self.edit_bcet, flag=wx.LEFT, border=10)
         self.edit_wcet = wx.TextCtrl(self, size=(70, -1))
-        self.sizer.Add(self.edit_wcet)
+        self.sizer.Add(self.edit_wcet, flag=wx.LEFT, border=10)
         self.SetSizerAndFit(self.sizer)
 
 class FirstTaskPanel(wx.Panel):
@@ -313,14 +323,21 @@ class FirstTaskPanel(wx.Panel):
         wx.Panel.__init__(self, parent)
         self.taskSizer = wx.BoxSizer(wx.HORIZONTAL)
         self.editTid = wx.TextCtrl(self, size=(70, -1))
+        self.taskSizer.Add(self.editTid, flag=wx.LEFT, border=10)
         self.editOffset = wx.TextCtrl(self, size=(70, -1))
+        self.taskSizer.Add(self.editOffset, flag=wx.LEFT, border=10)
         self.editBcet = wx.TextCtrl(self, size=(70, -1))
+        self.taskSizer.Add(self.editBcet, flag=wx.LEFT, border=10)
         self.editWcet = wx.TextCtrl(self, size=(70, -1))
+        self.taskSizer.Add(self.editWcet, flag=wx.LEFT, border=10)
         self.editDeadline = wx.TextCtrl(self, size=(70, -1))
+        self.taskSizer.Add(self.editDeadline, flag=wx.LEFT, border=10)
         self.editPeriod = wx.TextCtrl(self, size=(70, -1))
+        self.taskSizer.Add(self.editPeriod, flag=wx.LEFT, border=10)
         self.editProcessor = wx.TextCtrl(self, size=(70, -1))
+        self.taskSizer.Add(self.editProcessor, flag=wx.LEFT, border=10)
         self.editPre = wx.TextCtrl(self, size=(70, -1))
-        self.taskSizer.AddMany([self.editTid, self.editOffset, self.editBcet, self.editWcet, self.editDeadline, self.editPeriod, self.editProcessor, self.editPre])
+        self.taskSizer.Add(self.editPre, flag=wx.LEFT, border=10)
         self.SetSizerAndFit(self.taskSizer)
 
 
@@ -330,7 +347,7 @@ class TaskPanel(FirstTaskPanel):
     def __init__(self, parent):
         FirstTaskPanel.__init__(self, parent)
         self.taskDelButton = wx.Button(self, size=(70, -1), label="Delete")
-        self.taskSizer.Add(self.taskDelButton)
+        self.taskSizer.Add(self.taskDelButton, flag=wx.LEFT, border=15)
         self.SetSizerAndFit(self.taskSizer)
 
 
