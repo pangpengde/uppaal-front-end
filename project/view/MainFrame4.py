@@ -41,10 +41,11 @@ class MainFrame(wx.Frame):
     showinuppaal = None
     systemname = None
     resulttext = None
+    resultgird = None
 
     def __init__(self, parent, title):
         super(MainFrame, self).__init__(parent, title=title, size=(800, 700))
-        # TODO can not auto visiable scrollerbar
+        # TODO can not auto visiable or resize scrollerbar
         self.mainPanel = wx.ScrolledWindow(self, -1)
         self.mainPanel.SetScrollbars(1, 1, 20, 20)
         self.mainSizer = wx.BoxSizer(wx.VERTICAL)
@@ -232,12 +233,12 @@ class MainFrame(wx.Frame):
         self.systemname = "model"
         xml = file('../source/%s.xml' % self.systemname, 'r')
         modelxml = xml.read()
-        if self.xmltext == None:
+        if self.xmltext is None:
             self.xmltext = wx.TextCtrl(self.mainPanel, -1, str(modelxml), size=(700, 100), style=wx.TE_MULTILINE)
             self.mainSizer.Add(self.xmltext, flag=wx.LEFT|wx.TOP, border=10)
         else:
             self.xmltext.SetValue(str(modelxml))
-        if self.showinuppaal == None:
+        if self.showinuppaal is None:
             self.showinuppaal = wx.Button(self.mainPanel, size=(100, -1), label="Show in Uppaal")
             self.showinuppaal.Bind(wx.EVT_BUTTON, self.on_showinuppaal, self.showinuppaal)
             self.mainSizer.Add(self.showinuppaal, flag=wx.LEFT|wx.TOP, border=10)
@@ -249,11 +250,30 @@ class MainFrame(wx.Frame):
         # resultfile = file('../source/%s.result' % self.systemname, 'r')
         # result = resultfile.read()
         ra = ResultAnalyse()
-        if self.resulttext == None:
+        if self.resulttext is None:
             self.resulttext = wx.TextCtrl(self.mainPanel, -1, str(ra.resultToShow), size=(700, 100), style=wx.TE_MULTILINE)
             self.mainSizer.Add(self.resulttext, flag=wx.LEFT|wx.TOP, border=10)
         else:
             self.resulttext.SetValue(str(ra.resultToShow))
+
+        # if self.resultgird is not None:
+        #     self.mainSizer.Remove(self.resultgird)
+        #     self.resultgird = None
+        #
+        # if len(ra.trace) > 0:
+        #     self.resultgird = wx.GridSizer(len(ra.trace), len(ra.trace[0]), 1, 1)
+        #     for index, i in enumerate(ra.trace):
+        #         for j in i:
+        #             temp = wx.StaticText(self.mainPanel, label=j, size=(50, -1))
+        #             if index == 0:
+        #                 temp.SetBackgroundColour('#2F2F2F')
+        #             elif index % 2 == 0:
+        #                 temp.SetBackgroundColour('#808080')
+        #                 pass
+        #             else:
+        #                 pass
+        #             self.resultgird.Add(temp)
+        #     self.mainSizer.Add(self.resultgird, flag=wx.LEFT|wx.TOP, border=10)
 
         self.mainSizer.Layout()
 
