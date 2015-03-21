@@ -21,13 +21,16 @@ class UserInput(object):
     DEPS = 'deps'
     D = 'd'
 
-    tasks = []
+    tasks = None
     # platform includes bus
-    processors = []
+    processors = None
     bus = None
-    deps = []
+    deps = None
 
     def __init__(self):
+        self.tasks = []
+        self.processors = []
+        self.deps = []
         pass
 
     def get_tasks(self):
