@@ -14,6 +14,7 @@ from controller.ModelGenerate import ModelGenerate
 from controller.ResultAnalyse import ResultAnalyse
 
 class MainFrame(wx.Frame):
+    title = None
     mainSizer = None
     mainPanel = None
     # only one menu bar in the mainframe,includes file menu and about menu
@@ -44,9 +45,12 @@ class MainFrame(wx.Frame):
     resulttext = None
     resultgird = None
 
+    fileName = None
+
     def __init__(self, parent, title):
         super(MainFrame, self).__init__(parent, title=title, size=(800, 700))
         # TODO can not auto visiable or resize scrollerbar
+        self.title = title
         self.mainPanel = wx.ScrolledWindow(self, -1)
         self.mainPanel.SetScrollbars(1, 1, 20, 20)
         self.mainSizer = wx.BoxSizer(wx.VERTICAL)
@@ -80,9 +84,11 @@ class MainFrame(wx.Frame):
 
     def init_filemenu(self):
         self.fileMenu = wx.Menu()
-        self.fileMenu.Append(wx.ID_NEW, '&New', 'Start to describe a new system')
-        self.fileMenu.Append(wx.ID_OPEN, '&Open', 'Open a exist system specification')
-        self.fileMenu.Append(wx.ID_SAVE, '&Save', 'Save system specification')
+        # self.fileMenu.Append(wx.ID_NEW, '&New', 'Start to describe a new system')
+        fopen = self.fileMenu.Append(wx.ID_OPEN, '&Open', 'Open a exist system specification')
+        self.Bind(wx.EVT_MENU, self.on_open, fopen)
+        fsave = self.fileMenu.Append(wx.ID_SAVE, '&Save', 'Save system specification')
+        self.Bind(wx.EVT_MENU, self.on_save, fsave)
         self.fileMenu.AppendSeparator()
         fitem = self.fileMenu.Append(wx.ID_EXIT, 'Quit', 'Quit Tool')
         self.Bind(wx.EVT_MENU, self.on_quit, fitem)
@@ -178,6 +184,95 @@ class MainFrame(wx.Frame):
     def on_quit(self, e):
         self.Close()
 
+    def on_open(self, e):
+        dlg = wx.FileDialog(self, "Open data file...",
+                            os.getcwd(),
+                            style=wx.FD_FILE_MUST_EXIST,
+                            wildcard="*.data")
+        if dlg.ShowModal() == wx.ID_OK:
+            self.fileName = dlg.GetPath()
+            self.SetTitle(self.title + '--' + self.fileName)
+            fopen = file(self.fileName, 'r')
+            # todo second open error
+            userInput = UserInput()
+            userInput.load(fopen)
+            self.init_data(userInput)
+
+    def init_data(self, userInput):
+        self.init_panel(len(userInput.processors), self.processorPanels, self.on_pro_add_button)
+        self.init_panel(len(userInput.tasks), self.taskPanels, self.on_task_add_button)
+
+        if len(userInput.processors) > 0:
+            index = 0
+            for k, a in self.processorPanels.items():
+                a.editPname.SetValue(str(userInput.processors[index].get_pid()))
+                a.policyCombo.SetValue(userInput.processors[index].get_policy())
+                a.preemptCombo.SetValue(userInput.processors[index].get_preempt())
+                index = index + 1
+
+        if userInput.get_bus() is not None:
+            self.busPanel.edit_bcet.SetValue(str(userInput.get_bus().get_bcet()))
+            self.busPanel.edit_wcet.SetValue(str(userInput.get_bus().get_wcet()))
+
+        if len(userInput.tasks) > 0:
+            index = 0
+            for k, a in self.taskPanels.items():
+                a.editTid.SetValue(str(userInput.tasks[index].get_tid()))
+                a.editOffset.SetValue(str(userInput.tasks[index].get_ioffset()))
+                a.editBcet.SetValue(str(userInput.tasks[index].get_bcet()))
+                a.editWcet.SetValue(str(userInput.tasks[index].get_wcet()))
+                a.editDeadline.SetValue(str(userInput.tasks[index].get_deadline()))
+                a.editPeriod.SetValue(str(userInput.tasks[index].get_period()))
+                # self.taskPanels[index].editTid.SetValue(str(userInput.tasks[index].get_tid()))
+                # self.taskPanels[index].editTid.SetValue(str(userInput.tasks[index].get_tid()))
+                index = index + 1
+
+        pass
+
+    def init_panel(self, needLen, panelList, callback):
+        if needLen > 0:
+            if len(panelList) > needLen:
+                les = len(panelList) - needLen
+                index = 0
+                while index < les:
+                    self.proSizer.Remove(self.processorPanels[len(panelList) - index])
+                    index = index + 1
+                pass
+            elif len(panelList) < needLen:
+                les = needLen - len(panelList)
+                index = 0
+                while index < les:
+                    index = index + 1
+                    callback(None)
+                pass
+            self.mainSizer.Layout()
+        pass
+
+    def on_save(self, e):
+        if not self.fileName:
+            self.on_save_as(e)
+        else:
+            self.save_file()
+
+    def on_save_as(self, event):
+        dlg = wx.FileDialog(self,
+                            "Save data as ...",
+                            os.getcwd(),
+                            style=wx.SAVE|wx.OVERWRITE_PROMPT,
+                            wildcard="*.data")
+        if dlg.ShowModal() == wx.ID_OK:
+            filename = dlg.GetPath()
+            if not os.path.splitext(filename)[1]:
+                filename = filename + '.data'
+            self.fileName = filename
+            self.save_file()
+            self.SetTitle(self.title + '--' + self.fileName)
+
+    def save_file(self):
+        userinput = self.get_userinput()
+        fsave = file(self.fileName, 'w')
+        userinput.save(fsave)
+
     def on_pro_del_button(self, e):
         button = e.GetEventObject()
         self.processorPanels[button].Destroy()
@@ -204,7 +299,7 @@ class MainFrame(wx.Frame):
         self.taskSizer.Add(temp, flag=wx.TOP, border=10)
         self.mainSizer.Layout()
 
-    def on_verify(self, e):
+    def get_userinput(self):
         userinput = UserInput()
         temp = 0
         for a, b in self.processorPanels.items():
@@ -220,22 +315,28 @@ class MainFrame(wx.Frame):
         for a, b in self.taskPanels.items():
             for k, v in self.taskPanels.items():
                 if int(v.editTid.GetValue()) == temp:
+                    proIndex = int(v.editProcessor.GetValue())
                     userinput.tasks.append(Task(int(v.editTid.GetValue()),
                                                 int(v.editOffset.GetValue()),
                                                 int(v.editBcet.GetValue()),
                                                 int(v.editWcet.GetValue()),
                                                 int(v.editDeadline.GetValue()),
                                                 int(v.editPeriod.GetValue()),
-                                                userinput.processors[int(v.editProcessor.GetValue())]))
+                                                proIndex,
+                                                userinput.processors[proIndex]))
                     if len(v.editPre.GetValue()) != 0:
-                        userinput.deps.append(Dep(userinput.tasks[int(v.editTid.GetValue())],
-                                                  userinput.tasks[int(v.editPre.GetValue())]))
+                        tIndex = int(v.editTid.GetValue())
+                        preIndex = int(v.editPre.GetValue())
+                        userinput.deps.append(Dep(tIndex, userinput.tasks[tIndex],
+                                                  preIndex, userinput.tasks[preIndex]))
                     temp += 1
                     continue
+        return userinput
 
+    def on_verify(self, e):
         self.systemname = self.tempFileName.GetValue()
         ta = TemplateAnalyse()
-        ta.user_input = userinput
+        ta.user_input = self.get_userinput()
         ta.init_template()
         mg = ModelGenerate(self.systemname)
         mg.ta = ta

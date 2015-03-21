@@ -1,5 +1,7 @@
 # coding : utf-8
 
+import ConfigParser
+
 from Task import Task
 from Processor import Processor
 from Dep import Dep
@@ -8,6 +10,17 @@ from Bus import Bus
 
 class UserInput(object):
     """docstring for UserInput"""
+    # config flag
+    PROCESSOR = 'processor'
+    P = 'p'
+    BUS = 'bus'
+    BCET = 'bcet'
+    WCET = 'wcet'
+    TASK = 'task'
+    T = 't'
+    DEPS = 'deps'
+    D = 'd'
+
     tasks = []
     # platform includes bus
     processors = []
@@ -15,7 +28,7 @@ class UserInput(object):
     deps = []
 
     def __init__(self):
-       pass
+        pass
 
     def get_tasks(self):
         return self.tasks
@@ -28,6 +41,70 @@ class UserInput(object):
 
     def get_deps(self):
         return self.deps
+
+    def save(self, fsave):
+        config = ConfigParser.ConfigParser()
+        if len(self.processors) > 0:
+            config.add_section(self.PROCESSOR)
+            for index, a in enumerate(self.processors):
+                config.set(self.PROCESSOR, self.P + str(index), a.toString())
+
+        if self.bus is not None:
+            config.add_section(self.BUS)
+            config.set(self.BUS, self.BCET, self.bus.get_bcet())
+            config.set(self.BUS, self.WCET, self.bus.get_wcet())
+
+        if len(self.tasks) > 0:
+            config.add_section(self.TASK)
+            for index, a in enumerate(self.tasks):
+                config.set(self.TASK, self.T + str(index), a.toString())
+
+        if len(self.deps) > 0:
+            config.add_section(self.DEPS)
+            for index, a in enumerate(self.deps):
+                config.set(self.DEPS, self.D + str(index), a.toString())
+
+        config.write(fsave)
+        pass
+
+    def load(self, fopen):
+        config = ConfigParser.ConfigParser()
+        config.readfp(fopen)
+        if config.has_section(self.PROCESSOR):
+            proNames = config.options(self.PROCESSOR)
+            for a in proNames:
+                proString = config.get(self.PROCESSOR, a)
+                proList = proString.split(',')
+                self.processors.append(Processor(int(proList[0]), proList[1], proList[2]))
+
+        if config.has_option('bus', 'bcet') and config.has_option('bus', 'wcet'):
+            self.bus = Bus(config.getint('bus', 'bcet'), config.getint('bus', 'wcet'))
+
+        if config.has_section(self.TASK):
+            taskNames = config.options(self.TASK)
+            for a in taskNames:
+                taskString = config.get(self.TASK, a)
+                taskList = taskString.split(',')
+                self.tasks.append(Task(
+                    int(taskList[0]),
+                    int(taskList[1]),
+                    int(taskList[2]),
+                    int(taskList[3]),
+                    int(taskList[4]),
+                    int(taskList[5]),
+                    int(taskList[6]),
+                    self.processors[int(taskList[6])]
+                ))
+
+        if config.has_section(self.DEPS):
+            depsNames = config.options(self.DEPS)
+            for a in depsNames:
+                depsString = config.get(self.DEPS, a)
+                depsList = depsString.split(',')
+                self.deps.append(Dep(int(depsList[0]), self.tasks[int(depsList[0])],
+                                    int(depsList[1]), self.tasks[int(depsList[1])]))
+        pass
+
 
     """def test(self):
         # tid, i_offset, offset, bcet, wcet, deadline, period, pe

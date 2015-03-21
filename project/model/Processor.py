@@ -19,3 +19,6 @@ class Processor(object):
 
     def get_preempt(self):
         return self.is_preemptible
+
+    def toString(self):
+        return str(self.pid) + ',' + str(self.policy) + ',' + str(self.is_preemptible)
