@@ -62,7 +62,7 @@ class MainFrame(wx.Frame):
         self.init_bus_panel()
         self.init_task_sizer()
         self.init_spec_task_panel()
-        # self.init_control_panel()
+        self.init_control_panel()
         self.init_resultpanel()
 
         self.verify_button = wx.Button(self.mainPanel, size=(70, -1), label="Verify!!")
@@ -162,11 +162,10 @@ class MainFrame(wx.Frame):
         self.specSizer.Add(self.taskSizer)
 
     def init_control_panel(self):
-        h_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        tname = wx.StaticText(self.mainPanel, label="temp file name:", size=(100, -1))
-        h_sizer.Add(tname, flag=wx.LEFT|wx.TOP, border=10)
-        self.tempFileName = wx.TextCtrl(self, -1, 'model', size=(100, -1))
-        h_sizer.Add(self.tempFileName, flag=wx.LEFT|wx.TOP, border=10)
+        tname = wx.StaticBox(self.mainPanel, label="Temp file name:", size=(100, -1))
+        h_sizer = wx.StaticBoxSizer(tname, wx.HORIZONTAL)
+        self.tempFileName = wx.TextCtrl(self.mainPanel, -1, 'model', size=(100, -1))
+        h_sizer.Add(self.tempFileName, flag=wx.LEFT|wx.TOP|wx.RIGHT, border=10)
         self.specSizer.Add(h_sizer)
 
     def init_resultpanel(self):
@@ -233,14 +232,16 @@ class MainFrame(wx.Frame):
                                                   userinput.tasks[int(v.editPre.GetValue())]))
                     temp += 1
                     continue
+
+        self.systemname = self.tempFileName.GetValue()
         ta = TemplateAnalyse()
         ta.user_input = userinput
         ta.init_template()
-        mg = ModelGenerate()
+        mg = ModelGenerate(self.systemname)
         mg.ta = ta
         mg.init_ta()
         mg.genarate()
-        self.systemname = "model"
+
         xml = file('../source/%s.xml' % self.systemname, 'r')
         modelxml = xml.read()
         if self.xmltext is None:
@@ -259,7 +260,7 @@ class MainFrame(wx.Frame):
         os.system(cmd)
         # resultfile = file('../source/%s.result' % self.systemname, 'r')
         # result = resultfile.read()
-        ra = ResultAnalyse()
+        ra = ResultAnalyse(self.systemname)
         if self.resulttext is None:
             self.resulttext = wx.TextCtrl(self.mainPanel, -1, str(ra.resultToShow), size=(700, -1))
             self.mainSizer.Add(self.resulttext, flag=wx.LEFT|wx.TOP, border=10)

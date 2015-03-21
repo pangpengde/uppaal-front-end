@@ -26,8 +26,8 @@ class ResultAnalyse(object):
     #the time from
     clock = 0
 
-    def __init__(self):
-        self.systemName = 'model'
+    def __init__(self, systemName):
+        self.systemName = systemName
         self.read_result()
         if self.resultToShow == 'Verification Failed.\n':
             # wtf, sometimes it gives 'EXCEPTION: Failed to generate trace.'

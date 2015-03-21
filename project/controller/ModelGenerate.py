@@ -6,6 +6,7 @@ from model import UserInput
 class ModelGenerate(object):
     """docstring for ModelGenerate"""
     # task number and processor number
+    defaultDescription = 'description.txt'
     const = 'const'
     int = 'int'
     task_t = 'task_t'
@@ -21,8 +22,10 @@ class ModelGenerate(object):
     template = None
     procs = None
     bus = None
+    systemName = None
 
-    def __init__(self):
+    def __init__(self, systemName):
+        self.systemName = systemName
         pass
 
     def init_ta(self):
@@ -36,6 +39,7 @@ class ModelGenerate(object):
         self.set_part2()
         self.set_part3()
         self.write_model()
+        self.write_q()
 
     def set_part1(self):
         self.part1 = self.const + ' ' + self.int + ' N ' + self.equal + ' ' + str(self.template.get_n()) + ';\n'
@@ -101,7 +105,7 @@ class ModelGenerate(object):
         t4 = ft4.read()
 
         #project/source/
-        modelxml = open('../source/model.xml', 'w')
+        modelxml = open('../source/%s.xml' % self.systemName, 'w')
 
         modelxml.write(t1)
         modelxml.write(self.part1)
@@ -116,6 +120,15 @@ class ModelGenerate(object):
         ft3.close()
         ft4.close()
         modelxml.close()
+
+    def write_q(self):
+        description = open('../source/%s' % self.defaultDescription, 'r')
+        des = description.read()
+        q = open('../source/%s.q' % self.systemName, 'w')
+        q.write(des)
+        description.close()
+        q.close()
+        pass
 
 if __name__ == '__main__':
     model = ModelGenerate()
