@@ -36,6 +36,7 @@ class MainFrame(wx.Frame):
     # the result area
     resultSizer = None
     resultPanel = None
+    tempFileName = None
 
     xmltext = None
     showinuppaal = None
@@ -61,6 +62,7 @@ class MainFrame(wx.Frame):
         self.init_bus_panel()
         self.init_task_sizer()
         self.init_spec_task_panel()
+        # self.init_control_panel()
         self.init_resultpanel()
 
         self.verify_button = wx.Button(self.mainPanel, size=(70, -1), label="Verify!!")
@@ -159,6 +161,14 @@ class MainFrame(wx.Frame):
         self.taskSizer.Add(self.taskPanels[0])
         self.specSizer.Add(self.taskSizer)
 
+    def init_control_panel(self):
+        h_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        tname = wx.StaticText(self.mainPanel, label="temp file name:", size=(100, -1))
+        h_sizer.Add(tname, flag=wx.LEFT|wx.TOP, border=10)
+        self.tempFileName = wx.TextCtrl(self, -1, 'model', size=(100, -1))
+        h_sizer.Add(self.tempFileName, flag=wx.LEFT|wx.TOP, border=10)
+        self.specSizer.Add(h_sizer)
+
     def init_resultpanel(self):
         # self.resultPanel = wx.Panel(self.mainPanel, size=(900, 500))
         self.resultSizer = wx.BoxSizer(wx.VERTICAL)
@@ -251,29 +261,29 @@ class MainFrame(wx.Frame):
         # result = resultfile.read()
         ra = ResultAnalyse()
         if self.resulttext is None:
-            self.resulttext = wx.TextCtrl(self.mainPanel, -1, str(ra.resultToShow), size=(700, 100), style=wx.TE_MULTILINE)
+            self.resulttext = wx.TextCtrl(self.mainPanel, -1, str(ra.resultToShow), size=(700, -1))
             self.mainSizer.Add(self.resulttext, flag=wx.LEFT|wx.TOP, border=10)
         else:
             self.resulttext.SetValue(str(ra.resultToShow))
 
-        # if self.resultgird is not None:
-        #     self.mainSizer.Remove(self.resultgird)
-        #     self.resultgird = None
-        #
-        # if len(ra.trace) > 0:
-        #     self.resultgird = wx.GridSizer(len(ra.trace), len(ra.trace[0]), 1, 1)
-        #     for index, i in enumerate(ra.trace):
-        #         for j in i:
-        #             temp = wx.StaticText(self.mainPanel, label=j, size=(50, -1))
-        #             if index == 0:
-        #                 temp.SetBackgroundColour('#2F2F2F')
-        #             elif index % 2 == 0:
-        #                 temp.SetBackgroundColour('#808080')
-        #                 pass
-        #             else:
-        #                 pass
-        #             self.resultgird.Add(temp)
-        #     self.mainSizer.Add(self.resultgird, flag=wx.LEFT|wx.TOP, border=10)
+        if self.resultgird is not None:
+            self.mainSizer.Remove(self.resultgird)
+            self.resultgird = None
+
+        if len(ra.trace) > 0:
+            self.resultgird = wx.GridSizer(len(ra.trace), len(ra.trace[0]), 1, 1)
+            for index, i in enumerate(ra.trace):
+                for j in i:
+                    temp = wx.StaticText(self.mainPanel, label=j, size=(50, -1))
+                    if index == 0:
+                        temp.SetBackgroundColour('#2F2F2F')
+                    elif index % 2 == 0:
+                        temp.SetBackgroundColour('#808080')
+                        pass
+                    else:
+                        pass
+                    self.resultgird.Add(temp)
+            self.mainSizer.Add(self.resultgird, flag=wx.LEFT|wx.TOP, border=10)
 
         self.mainSizer.Layout()
 

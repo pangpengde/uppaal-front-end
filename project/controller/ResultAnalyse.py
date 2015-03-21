@@ -34,7 +34,7 @@ class ResultAnalyse(object):
             # have to make it robuster
             self.trace_analyse()
             self.trace_generate()
-            self.add_trace_to_result()
+            # self.add_trace_to_result()
         print self.resultToShow
 
     def read_result(self):
@@ -130,11 +130,11 @@ class ResultAnalyse(object):
         for l in self.trace:
             print l
 
-    def add_trace_to_result(self):
-        for l in self.trace:
-            for i in l:
-                self.resultToShow += '%s ' % i
-            self.resultToShow += '\n'
+    # def add_trace_to_result(self):
+    #     for l in self.trace:
+    #         for i in l:
+    #             self.resultToShow += '%s ' % i
+    #         self.resultToShow += '\n'
 
 
 if __name__ == '__main__':
