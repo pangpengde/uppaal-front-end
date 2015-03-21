@@ -46,6 +46,9 @@ class Task(object):
     def get_period(self):
         return self.period
 
+    def get_preIndex(self):
+        return self.peIndex
+
     def get_pe(self):
         return self.pe
 

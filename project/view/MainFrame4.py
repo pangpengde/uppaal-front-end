@@ -223,10 +223,12 @@ class MainFrame(wx.Frame):
                 a.editWcet.SetValue(str(userInput.tasks[index].get_wcet()))
                 a.editDeadline.SetValue(str(userInput.tasks[index].get_deadline()))
                 a.editPeriod.SetValue(str(userInput.tasks[index].get_period()))
-                # self.taskPanels[index].editTid.SetValue(str(userInput.tasks[index].get_tid()))
-                # self.taskPanels[index].editTid.SetValue(str(userInput.tasks[index].get_tid()))
+                a.editProcessor.SetValue(str(userInput.tasks[index].get_preIndex()))
+                if len(userInput.deps) > 0:
+                    for b in userInput.deps:
+                        if b.get_task_index() == index:
+                            a.editPre.SetValue(str(b.get_pre_index()))
                 index = index + 1
-
         pass
 
     def init_panel(self, needLen, panelList, callback):
@@ -234,8 +236,12 @@ class MainFrame(wx.Frame):
             if len(panelList) > needLen:
                 les = len(panelList) - needLen
                 index = 0
-                while index < les:
-                    self.proSizer.Remove(self.processorPanels[len(panelList) - index])
+                for k, v in panelList.items():
+                    if index <= les:
+                        index = index + 1
+                        continue
+                    panelList[k].Destroy()
+                    del panelList[k]
                     index = index + 1
                 pass
             elif len(panelList) < needLen:
