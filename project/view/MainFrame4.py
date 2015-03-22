@@ -225,9 +225,13 @@ class MainFrame(wx.Frame):
                 a.editPeriod.SetValue(str(userInput.tasks[index].get_period()))
                 a.editProcessor.SetValue(str(userInput.tasks[index].get_preIndex()))
                 if len(userInput.deps) > 0:
+                    result = ''
                     for b in userInput.deps:
                         if b.get_task_index() == index:
-                            a.editPre.SetValue(str(b.get_pre_index()))
+                            if len(result) > 0:
+                                result = result + ','
+                            result = result + str(b.get_pre_index())
+                    a.editPre.SetValue(result)
                 index = index + 1
         pass
 
@@ -332,9 +336,11 @@ class MainFrame(wx.Frame):
                                                 userinput.processors[proIndex]))
                     if len(v.editPre.GetValue()) != 0:
                         tIndex = int(v.editTid.GetValue())
-                        preIndex = int(v.editPre.GetValue())
-                        userinput.deps.append(Dep(tIndex, userinput.tasks[tIndex],
-                                                  preIndex, userinput.tasks[preIndex]))
+                        preList = v.editPre.GetValue().split(',')
+                        for p in preList:
+                            preIndex = int(p)
+                            userinput.deps.append(Dep(tIndex, userinput.tasks[tIndex],
+                                                      preIndex, userinput.tasks[preIndex]))
                     temp += 1
                     continue
         return userinput

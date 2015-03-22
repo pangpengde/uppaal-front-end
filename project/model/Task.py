@@ -15,8 +15,8 @@ class Task(object):
     # period of the task
     period = None
     # the processor request to run the task
-    peIndex = None
-    pe = None
+    peIndex = []
+    pe = []
 
     def __init__(self, t_id,  i_offset, bcet, wcet, deadline, period, peIndex, pe):
         self.t_id = t_id
