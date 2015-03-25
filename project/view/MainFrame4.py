@@ -13,6 +13,7 @@ from controller.TemplateAnalyse import TemplateAnalyse
 from controller.ModelGenerate import ModelGenerate
 from controller.ResultAnalyse import ResultAnalyse
 
+
 class MainFrame(wx.Frame):
     title = None
     mainSizer = None
@@ -23,6 +24,8 @@ class MainFrame(wx.Frame):
     aboutMenu = None
     # the system specification area
     specSizer = None
+    # horizontal sizer to store pro,bus and systemname
+    hSizer = None
     # the processor panel includes several processors
     proSizer = None
     proAddButton = None
@@ -42,8 +45,8 @@ class MainFrame(wx.Frame):
     xmltext = None
     showinuppaal = None
     systemname = None
-    resulttext = None
-    resultgird = None
+    resultText = None
+    resultGird = None
 
     fileName = None
 
@@ -60,6 +63,7 @@ class MainFrame(wx.Frame):
         self.init_menubar()
 
         self.init_spec_sizer()
+        self.init_h_sizer()
         self.init_pro_sizer()
         self.init_spec_propanel()
         self.init_resultpanel()
@@ -102,6 +106,10 @@ class MainFrame(wx.Frame):
         st = wx.StaticText(self.mainPanel, label="System Specification")
         self.specSizer.Add(st, flag=wx.ALL, border=10)
 
+    def init_h_sizer(self):
+        self.hSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.specSizer.Add(self.hSizer)
+
     def init_pro_sizer(self):
         processor = wx.StaticBox(self.mainPanel, label="Processors:")
         self.proSizer = wx.StaticBoxSizer(processor, wx.VERTICAL)
@@ -122,7 +130,7 @@ class MainFrame(wx.Frame):
     def init_spec_propanel(self):
         self.processorPanels[0] = FirstSpecProcessor(self.mainPanel)
         self.proSizer.Add(self.processorPanels[0], flag=wx.TOP, border=10)
-        self.specSizer.Add(self.proSizer)
+        self.hSizer.Add(self.proSizer)
 
     def init_bus_panel(self):
         bus = wx.StaticBox(self.mainPanel, label="Bus:")
@@ -135,7 +143,9 @@ class MainFrame(wx.Frame):
         self.busSizer.Add(text_sizer)
         self.busPanel = BusPanel(self.mainPanel)
         self.busSizer.Add(self.busPanel)
-        self.specSizer.Add(self.busSizer)
+        #self.specSizer.Add(self.busSizer)
+        #
+        self.hSizer.Add(self.busSizer, flag=wx.LEFT, border=20)
 
     def init_task_sizer(self):
         task = wx.StaticBox(self.mainPanel, label="Task:", size=(70, -1))
@@ -168,11 +178,11 @@ class MainFrame(wx.Frame):
         self.specSizer.Add(self.taskSizer)
 
     def init_control_panel(self):
-        tname = wx.StaticBox(self.mainPanel, label="Temp file name:", size=(100, -1))
-        h_sizer = wx.StaticBoxSizer(tname, wx.HORIZONTAL)
-        self.tempFileName = wx.TextCtrl(self.mainPanel, -1, 'model', size=(100, -1))
-        h_sizer.Add(self.tempFileName, flag=wx.LEFT|wx.TOP|wx.RIGHT, border=10)
-        self.specSizer.Add(h_sizer)
+        sname = wx.StaticBox(self.mainPanel, label="System Name:", size=(100, -1))
+        h_sizer = wx.StaticBoxSizer(sname, wx.HORIZONTAL)
+        self.tempFileName = wx.TextCtrl(self.mainPanel, -1, 'model', size=(100, 33))
+        h_sizer.Add(self.tempFileName, flag=wx.LEFT | wx.TOP | wx.RIGHT, border=10)
+        self.hSizer.Add(h_sizer, flag=wx.LEFT, border=20)
 
     def init_resultpanel(self):
         # self.resultPanel = wx.Panel(self.mainPanel, size=(900, 500))
@@ -204,11 +214,16 @@ class MainFrame(wx.Frame):
 
         if len(userInput.processors) > 0:
             index = 0
-            for k, a in self.processorPanels.items():
-                a.editPname.SetValue(str(userInput.processors[index].get_pid()))
-                a.policyCombo.SetValue(userInput.processors[index].get_policy())
-                a.preemptCombo.SetValue(userInput.processors[index].get_preempt())
-                index = index + 1
+            temp = 0
+            for v, b in self.processorPanels.items():
+                for k, a in self.processorPanels.items():
+                    if temp == int(userInput.processors[index].get_pid()):
+                        a.editPname.SetValue(str(userInput.processors[index].get_pid()))
+                        a.policyCombo.SetValue(userInput.processors[index].get_policy())
+                        a.preemptCombo.SetValue(userInput.processors[index].get_preempt())
+                        index += 1
+                temp += 1
+                index = 0
 
         if userInput.get_bus() is not None:
             self.busPanel.edit_bcet.SetValue(str(userInput.get_bus().get_bcet()))
@@ -242,11 +257,11 @@ class MainFrame(wx.Frame):
                 index = 0
                 for k, v in panelList.items():
                     if index <= les:
-                        index = index + 1
+                        index += 1
                         continue
                     panelList[k].Destroy()
                     del panelList[k]
-                    index = index + 1
+                    index += 1
                 pass
             elif len(panelList) < needLen:
                 les = needLen - len(panelList)
@@ -363,7 +378,7 @@ class MainFrame(wx.Frame):
         else:
             self.xmltext.SetValue(str(modelxml))
         if self.showinuppaal is None:
-            self.showinuppaal = wx.Button(self.mainPanel, size=(100, -1), label="Show in Uppaal")
+            self.showinuppaal = wx.Button(self.mainPanel, size=(150, -1), label="Show model in UPPAAL")
             self.showinuppaal.Bind(wx.EVT_BUTTON, self.on_showinuppaal, self.showinuppaal)
             self.mainSizer.Add(self.showinuppaal, flag=wx.LEFT|wx.TOP, border=10)
 
@@ -374,30 +389,48 @@ class MainFrame(wx.Frame):
         # resultfile = file('../source/%s.result' % self.systemname, 'r')
         # result = resultfile.read()
         ra = ResultAnalyse(self.systemname)
-        if self.resulttext is None:
-            self.resulttext = wx.TextCtrl(self.mainPanel, -1, str(ra.resultToShow), size=(700, -1))
-            self.mainSizer.Add(self.resulttext, flag=wx.LEFT|wx.TOP, border=10)
+        if self.resultText is None:
+            self.resultText = wx.TextCtrl(self.mainPanel, -1, str(ra.resultToShow), size=(700, -1))
+            self.mainSizer.Add(self.resultText, flag=wx.LEFT | wx.TOP, border=10)
         else:
-            self.resulttext.SetValue(str(ra.resultToShow))
+            self.resultText.SetValue(str(ra.resultToShow))
 
-        if self.resultgird is not None:
-            self.mainSizer.Remove(self.resultgird)
-            self.resultgird = None
+        if self.resultGird is not None:
+            self.mainSizer.Remove(self.resultGird)
+            self.resultGird = None
 
         if len(ra.trace) > 0:
-            self.resultgird = wx.GridSizer(len(ra.trace), len(ra.trace[0]), 1, 1)
+            self.resultGird = wx.GridSizer(len(ra.trace), len(ra.trace[0]), 1, 1)
             for index, i in enumerate(ra.trace):
-                for j in i:
+                """for j in i:
                     temp = wx.StaticText(self.mainPanel, label=j, size=(50, -1))
                     if index == 0:
-                        temp.SetBackgroundColour('#2F2F2F')
+                        temp.SetBackgroundColour('#999999')
                     elif index % 2 == 0:
-                        temp.SetBackgroundColour('#808080')
+                        temp.SetBackgroundColour('#CCCCCC')
                         pass
                     else:
-                        pass
-                    self.resultgird.Add(temp)
-            self.mainSizer.Add(self.resultgird, flag=wx.LEFT|wx.TOP, border=10)
+                        pass"""
+                for j in i:
+                    if index == 0:
+                        if j == 'Time  ':
+                            temp = wx.StaticText(self.mainPanel, label=j, size=(50, -1))
+                        else:
+                            temp = wx.StaticText(self.mainPanel, label=j, size=(50, -1))
+                        temp.SetBackgroundColour('#666666')
+                    else:
+                        if j == 'O':
+                            temp = wx.StaticText(self.mainPanel, label=j, size=(50, -1))
+                            temp.SetBackgroundColour('#CCCCCC')
+                        elif j == '+':
+                            temp = wx.StaticText(self.mainPanel, label=j, size=(50, -1))
+                            temp.SetBackgroundColour('#999999')
+                        elif j == 'X':
+                            temp = wx.StaticText(self.mainPanel, label='Error', size=(50, -1))
+                        else:
+                            temp = wx.StaticText(self.mainPanel, label=j, size=(50, -1))
+                    self.resultGird.Add(temp)
+            self.mainSizer.Add(self.resultGird, flag=wx.LEFT | wx.TOP, border=10)
 
         self.mainSizer.Layout()
 

@@ -1,16 +1,15 @@
 
-
 const int MaxTime=500;
+const int BUFFERSIZE=30;//the maximu buffersize
+const int BUSSIZE=20; 
+const int Policies = 3;
+const int EDF = 0;
+const int RMS = 1;
+
+
 typedef int [0,N-1] tid_t;//task id
 typedef int [0,P-1] pid_t;///processor id
 typedef int [0,MaxTime] time_t;//The maximum time constant for all tasks,this is used of UPPAAL state footprint reduction.
-const int BUFFERSIZE=30;//the maximu buffersize
-const int BUSSIZE=20; 
-
-const int Policies      = 3;
-const int EDF       = 0;
-///const int FIFO       = 1;
-const int RMS       = 1;
 typedef int[0,Policies-1] policy_t;
 typedef struct{
     pid_t pid;
@@ -20,7 +19,11 @@ typedef struct{
 typedef processor processors[pid_t]; 
 int [-1,N] cpuQueue[P][BUFFERSIZE];
 clock time[N];//
-bool error=false;
+clock exec[N];//
+clock respt[N];
+clock cpuUsed[P];
+bool released[N];
+bool running[N];
 ///Data structure to keep task's attributes
 typedef struct{
     time_t init_offset;//the time offset for the task first released;
@@ -28,7 +31,7 @@ typedef struct{
     time_t wcet;//worst case execution time of task.
     time_t deadline;//the relative deadline,calculate at the period starts.
     time_t period;//period of the task
-    pid_t pe;//the processor requset to run the task
+    pid_t pe;//the processor request to run the task
     }task_t;
 typedef struct{
     bool release;
@@ -60,12 +63,11 @@ void insertQueue(pid_t pid,tid_t tid,int[0,BUFFERSIZE-1] index){
 broadcast chan check_dep[N],dep_ack[N];//chan used for checke dependency;
 broadcast chan check_pe[N];//chan used for check resource;
 broadcast chan sch_pol[P][Policies];
+//urgent broadcast chan run[N],preempt[N];//chan used for schedul the task;
 broadcast chan finish[N];//chan used to indicate the task has finishd;
 urgent broadcast  chan run[N],preempt[N];
 urgent broadcast chan urg;//used to performe urgent activate
 
 int[0,1] dynDep[N][N];
-
 //Config staDep and task
 //original tasks dependency;
-
