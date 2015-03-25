@@ -30,6 +30,7 @@ class MainFrame(wx.Frame):
     proSizer = None
     proAddButton = None
     processorPanels = {}
+    processorPanelIndex = []
     # the bus panel
     busSizer = None
     busPanel = None
@@ -37,6 +38,7 @@ class MainFrame(wx.Frame):
     taskSizer = None
     taskAddButton = None
     taskPanels = {}
+    taskPanelIndex = []
     # the result area
     resultSizer = None
     resultPanel = None
@@ -129,6 +131,7 @@ class MainFrame(wx.Frame):
 
     def init_spec_propanel(self):
         self.processorPanels[0] = FirstSpecProcessor(self.mainPanel)
+        self.processorPanelIndex.append(self.processorPanels[0])
         self.proSizer.Add(self.processorPanels[0], flag=wx.TOP, border=10)
         self.hSizer.Add(self.proSizer)
 
@@ -174,6 +177,7 @@ class MainFrame(wx.Frame):
 
     def init_spec_task_panel(self):
         self.taskPanels[0] = FirstTaskPanel(self.mainPanel)
+        self.taskPanelIndex.append(self.taskPanels[0])
         self.taskSizer.Add(self.taskPanels[0])
         self.specSizer.Add(self.taskSizer)
 
@@ -209,21 +213,16 @@ class MainFrame(wx.Frame):
             self.init_data(userInput)
 
     def init_data(self, userInput):
-        self.init_panel(len(userInput.processors), self.processorPanels, self.on_pro_add_button)
-        self.init_panel(len(userInput.tasks), self.taskPanels, self.on_task_add_button)
+        self.init_panel(len(userInput.processors), self.processorPanels, self.processorPanelIndex, self.on_pro_add_button)
+        self.init_panel(len(userInput.tasks), self.taskPanels, self.taskPanelIndex, self.on_task_add_button)
 
         if len(userInput.processors) > 0:
             index = 0
-            temp = 0
-            for v, b in self.processorPanels.items():
-                for k, a in self.processorPanels.items():
-                    if temp == int(userInput.processors[index].get_pid()):
-                        a.editPname.SetValue(str(userInput.processors[index].get_pid()))
-                        a.policyCombo.SetValue(userInput.processors[index].get_policy())
-                        a.preemptCombo.SetValue(userInput.processors[index].get_preempt())
-                        index += 1
-                temp += 1
-                index = 0
+            for a in self.processorPanelIndex:
+                a.editPname.SetValue(str(userInput.processors[index].get_pid()))
+                a.policyCombo.SetValue(userInput.processors[index].get_policy())
+                a.preemptCombo.SetValue(userInput.processors[index].get_preempt())
+                index += 1
 
         if userInput.get_bus() is not None:
             self.busPanel.edit_bcet.SetValue(str(userInput.get_bus().get_bcet()))
@@ -231,7 +230,7 @@ class MainFrame(wx.Frame):
 
         if len(userInput.tasks) > 0:
             index = 0
-            for k, a in self.taskPanels.items():
+            for a in self.taskPanelIndex:
                 a.editTid.SetValue(str(userInput.tasks[index].get_tid()))
                 a.editOffset.SetValue(str(userInput.tasks[index].get_ioffset()))
                 a.editBcet.SetValue(str(userInput.tasks[index].get_bcet()))
@@ -250,21 +249,21 @@ class MainFrame(wx.Frame):
                 index = index + 1
         pass
 
-    def init_panel(self, needLen, panelList, callback):
+    def init_panel(self, needLen, panelDict, panelList, callback):
         if needLen > 0:
-            if len(panelList) > needLen:
-                les = len(panelList) - needLen
+            if len(panelDict) > needLen:
                 index = 0
-                for k, v in panelList.items():
-                    if index <= les:
+                for k, v in panelDict.items():
+                    if index < needLen:
                         index += 1
                         continue
-                    panelList[k].Destroy()
-                    del panelList[k]
+                    panelList.remove(panelDict[k])
+                    panelDict[k].Destroy()
+                    del panelDict[k]
                     index += 1
                 pass
-            elif len(panelList) < needLen:
-                les = needLen - len(panelList)
+            elif len(panelDict) < needLen:
+                les = needLen - len(panelDict)
                 index = 0
                 while index < les:
                     index = index + 1
@@ -300,6 +299,7 @@ class MainFrame(wx.Frame):
 
     def on_pro_del_button(self, e):
         button = e.GetEventObject()
+        self.processorPanelIndex.remove(self.processorPanels[button])
         self.processorPanels[button].Destroy()
         del self.processorPanels[button]
         self.mainSizer.Layout()
@@ -307,12 +307,14 @@ class MainFrame(wx.Frame):
     def on_pro_add_button(self, e):
         temp = SpecProcessor(self.mainPanel)
         self.processorPanels[temp.proDelButton] = temp
+        self.processorPanelIndex.append(temp)
         temp.proDelButton.Bind(wx.EVT_BUTTON, self.on_pro_del_button, temp.proDelButton)
         self.proSizer.Add(temp, flag=wx.TOP, border=10)
         self.mainSizer.Layout()
 
     def on_task_del_button(self, e):
         button = e.GetEventObject()
+        self.taskPanelIndex.remove(self.taskPanels[button])
         self.taskPanels[button].Destroy()
         del self.taskPanels[button]
         self.mainSizer.Layout()
@@ -320,6 +322,7 @@ class MainFrame(wx.Frame):
     def on_task_add_button(self, e):
         temp = TaskPanel(self.mainPanel)
         self.taskPanels[temp.taskDelButton] = temp
+        self.taskPanelIndex.append(temp)
         temp.taskDelButton.Bind(wx.EVT_BUTTON, self.on_task_del_button, temp.taskDelButton)
         self.taskSizer.Add(temp, flag=wx.TOP, border=10)
         self.mainSizer.Layout()
