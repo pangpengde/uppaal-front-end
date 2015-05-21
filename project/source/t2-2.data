@@ -1,0 +1,15 @@
+[processor]
+p0 = 0,EDF,true
+p1 = 1,EDF,true
+
+[bus]
+bcet = 1
+wcet = 1
+
+[task]
+t0 = 0,0,4,4,8,8,0
+t1 = 1,0,5,5,10,10,1
+
+[deps]
+d0 = 1,0
+

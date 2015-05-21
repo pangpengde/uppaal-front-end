@@ -5,7 +5,7 @@
 // Place global declarations here.
 //Config
 
-const int N = 5;
+const int N = 7;
 const int P = 2;
 
 const int MaxTime=1000;
@@ -81,18 +81,22 @@ int[0,1] dynDep[N][N];
 //Config staDep and task
 //original tasks dependency;
 const int [0,1] staDep[N][N]={
-	{0,0,0,0,0},
-	{0,0,0,0,0},
-	{0,1,0,0,0},
-	{0,0,0,0,0},
-	{0,1,0,1,0}
+	{0,0,0,0,0,0,0},
+	{1,0,0,0,0,0,0},
+	{1,0,0,0,0,0,0},
+	{0,1,1,0,0,0,0},
+	{0,0,1,0,0,0,0},
+	{0,1,0,0,1,0,0},
+	{0,1,0,1,0,1,0}
 };
 const task_t Tasks[N]={
-	{0,2,2,4,4,0},
-	{0,1,1,6,6,0},
-	{0,2,2,6,6,0},
-	{0,2,2,6,6,1},
-	{4,3,3,6,6,1}
+	{0,2,2,8,8,0},
+	{0,2,2,8,8,1},
+	{0,3,3,10,10,0},
+	{0,3,3,12,12,1},
+	{0,4,4,14,14,0},
+	{0,5,5,16,16,1},
+	{0,6,6,20,20,0}
 };
 </declaration>
 	<template>
@@ -648,7 +652,7 @@ forall(i:pid_t)cpuUsed[i]'==!empty(i)</label>
 		
 const processors pes ={
 	{0,RMS,true},
-	{1,EDF,true}
+	{1,RMS,true}
 };
 bus = BUS(1,1);
 

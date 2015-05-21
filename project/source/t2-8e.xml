@@ -5,20 +5,20 @@
 // Place global declarations here.
 //Config
 
-const int N = 5;
+const int N = 8;
 const int P = 2;
-
-const int MaxTime=1000;
-const int BUFFERSIZE=30;//the maximu buffersize
-const int BUSSIZE=20; 
-const int Policies = 3;
-const int EDF = 0;
-const int RMS = 1;
-
 
 typedef int [0,N-1] tid_t;//task id
 typedef int [0,P-1] pid_t;///processor id
+const int MaxTime=500;
 typedef int [0,MaxTime] time_t;//The maximum time constant for all tasks,this is used of UPPAAL state footprint reduction.
+const int BUFFERSIZE=30;//the maximu buffersize
+const int BUSSIZE=20; 
+
+const int Policies      = 3;
+const int EDF       = 0;
+///const int FIFO       = 1;
+const int RMS       = 1;
 typedef int[0,Policies-1] policy_t;
 typedef struct{
     pid_t pid;
@@ -28,19 +28,20 @@ typedef struct{
 typedef processor processors[pid_t]; 
 int [-1,N] cpuQueue[P][BUFFERSIZE];
 clock time[N];//
-clock exec[N];//
-clock respt[N];
+///clock exec[N];//
+///clock respt[N];
 clock cpuUsed[P];
-bool released[N];
-bool running[N];
-///Data structure to keep task's attributes
+///bool released[N];
+////bool running[N];
+bool error=false;
+///Data structer to keep task's attributes
 typedef struct{
     time_t init_offset;//the time offset for the task first released;
     time_t bcet;//best case execution time of task.
     time_t wcet;//worst case execution time of task.
     time_t deadline;//the relative deadline,calculate at the period starts.
     time_t period;//period of the task
-    pid_t pe;//the processor request to run the task
+    pid_t pe;//the processor requset to run the task
     }task_t;
 typedef struct{
     bool release;
@@ -76,137 +77,143 @@ broadcast chan sch_pol[P][Policies];
 broadcast chan finish[N];//chan used to indicate the task has finishd;
 urgent broadcast  chan run[N],preempt[N];
 urgent broadcast chan urg;//used to performe urgent activate
-
 int[0,1] dynDep[N][N];
 //Config staDep and task
 //original tasks dependency;
 const int [0,1] staDep[N][N]={
-	{0,0,0,0,0},
-	{0,0,0,0,0},
-	{0,1,0,0,0},
-	{0,0,0,0,0},
-	{0,1,0,1,0}
+	{0,0,0,0,0,0,0,0},
+	{1,0,0,0,0,0,0,0},
+	{1,0,0,0,0,0,0,0},
+	{1,0,0,0,0,0,0,0},
+	{0,1,1,1,0,0,0,0},
+	{0,1,0,0,1,0,0,0},
+	{0,0,1,0,0,0,0,0},
+	{0,1,0,0,0,1,0,0}
 };
 const task_t Tasks[N]={
-	{0,2,2,4,4,0},
-	{0,1,1,6,6,0},
-	{0,2,2,6,6,0},
-	{0,2,2,6,6,1},
-	{4,3,3,6,6,1}
+	{0,2,2,8,8,0},
+	{0,3,3,10,10,1},
+	{0,4,4,12,12,0},
+	{0,5,5,12,12,1},
+	{0,6,6,16,16,0},
+	{0,5,5,16,16,1},
+	{0,7,7,20,20,0},
+	{0,8,8,20,20,1}
 };
-</declaration>
+//</declaration>
 	<template>
 		<name x="9" y="9">Task</name>
 		<parameter>const tid_t id</parameter>
 		<declaration>// Place local declarations here.
+clock exec;
+clock respt;
 time_t InitOffset(){return Tasks[id].init_offset;}
 time_t Bcet(){return Tasks[id].bcet;}
 time_t Wcet(){return Tasks[id].wcet;}
 time_t DeadLine(){return Tasks[id].deadline;}
 time_t Period(){ return Tasks[id].period;}</declaration>
-		<location id="id0" x="-314" y="-34">
-			<name x="-324" y="-68">Ready</name>
-			<label kind="invariant" x="-365" y="-17">time[id]&lt;=DeadLine()</label>
+		<location id="id0" x="-272" y="-93">
+			<name x="-255" y="-110">Ready</name>
+			<label kind="invariant" x="-263" y="-84">time[id]&lt;=Period()
+&amp;&amp;exec'==0</label>
 		</location>
-		<location id="id1" x="-518" y="-221">
-			<name x="-569" y="-229">Error</name>
+		<location id="id1" x="-510" y="-263" color="#ff0000">
+			<name x="-501" y="-288">Error</name>
+			<label kind="invariant" x="-561" y="-246">exec'==0&amp;&amp;respt'==0</label>
 		</location>
-		<location id="id2" x="-654" y="-127">
-			<name x="-637" y="-136">Finish</name>
-			<label kind="invariant" x="-705" y="-119">time[id]&lt;=Period()</label>
+		<location id="id2" x="-697" y="-262">
+			<name x="-680" y="-271">Finish</name>
+			<label kind="invariant" x="-739" y="-236">!error&amp;&amp;time[id]&lt;=Period()
+&amp;&amp;exec'==0&amp;&amp;respt'==0</label>
 		</location>
-		<location id="id3" x="-518" y="-34">
-			<name x="-509" y="-68">Running</name>
-			<label kind="invariant" x="-569" y="-25">exec[id]&lt;=Wcet()</label>
+		<location id="id3" x="-510" y="-93">
+			<name x="-569" y="-118">Running</name>
+			<label kind="invariant" x="-604" y="-84">exec&lt;=Wcet()&amp;&amp;time[id]&lt;=Period()</label>
 		</location>
-		<location id="id4" x="-314" y="-230">
-			<name x="-425" y="-221">DependencyResolved</name>
+		<location id="id4" x="-272" y="-263">
+			<name x="-340" y="-254">DependencyResolved</name>
 			<urgent/>
 		</location>
-		<location id="id5" x="-518" y="-340">
-			<name x="-501" y="-340">WaitingDepedency</name>
-			<label kind="invariant" x="-561" y="-323">time[id]&lt;=Period()</label>
+		<location id="id5" x="-510" y="-408">
+			<name x="-493" y="-408">WaitingDepedency</name>
+			<label kind="invariant" x="-501" y="-391">time[id]&lt;=Period()&amp;&amp;exec'==0</label>
 		</location>
-		<location id="id6" x="-518" y="-442">
-			<name x="-527" y="-476">Initial</name>
-			<label kind="invariant" x="-501" y="-450">time[id]&lt;=InitOffset()</label>
+		<location id="id6" x="-510" y="-510">
+			<name x="-519" y="-544">Initial</name>
+			<label kind="invariant" x="-493" y="-518">time[id]&lt;=InitOffset()</label>
 		</location>
 		<init ref="id6"/>
 		<transition>
 			<source ref="id0"/>
 			<target ref="id1"/>
-			<label kind="guard" x="-467" y="-178">time[id]&gt;DeadLine()</label>
+			<label kind="guard" x="-408" y="-212">time[id]&gt;DeadLine()</label>
+			<label kind="assignment" x="-391" y="-195">error=true</label>
 		</transition>
 		<transition>
 			<source ref="id3"/>
 			<target ref="id0"/>
-			<label kind="synchronisation" x="-467" y="0">preempt[id]?</label>
-			<label kind="assignment" x="-467" y="17">running[id]=0</label>
-			<nail x="-518" y="34"/>
-			<nail x="-314" y="34"/>
+			<label kind="synchronisation" x="-425" y="-59">preempt[id]?</label>
+			<nail x="-510" y="-33"/>
+			<nail x="-272" y="-33"/>
 		</transition>
 		<transition>
 			<source ref="id0"/>
 			<target ref="id3"/>
-			<label kind="synchronisation" x="-442" y="-68">run[id]?</label>
-			<label kind="assignment" x="-459" y="-51">running[id]=1</label>
+			<label kind="synchronisation" x="-391" y="-118">run[id]?</label>
 		</transition>
 		<transition>
 			<source ref="id4"/>
 			<target ref="id0"/>
-			<label kind="synchronisation" x="-357" y="-136">check_pe[id]!</label>
+			<label kind="synchronisation" x="-263" y="-170">check_pe[id]!</label>
 		</transition>
 		<transition>
 			<source ref="id3"/>
 			<target ref="id1"/>
-			<label kind="guard" x="-561" y="-127">time[id]&gt;DeadLine()</label>
+			<label kind="guard" x="-501" y="-170">time[id]&gt;DeadLine()</label>
+			<label kind="assignment" x="-501" y="-153">error=true</label>
 		</transition>
 		<transition>
 			<source ref="id5"/>
 			<target ref="id1"/>
-			<label kind="guard" x="-552" y="-289">time[id]&gt;DeadLine()</label>
+			<label kind="guard" x="-501" y="-348">time[id]&gt;DeadLine()</label>
+			<label kind="assignment" x="-501" y="-331">error=true</label>
 		</transition>
 		<transition>
 			<source ref="id2"/>
 			<target ref="id5"/>
-			<label kind="guard" x="-654" y="-170">time[id]==Period()</label>
-			<label kind="synchronisation" x="-654" y="-306">check_dep[id]!</label>
-			<label kind="assignment" x="-646" y="-272">time[id]=0,
-exec[id]=0,
-respt[id]=0,
-running[id]=0,
-released[id]=1</label>
-			<nail x="-654" y="-340"/>
+			<label kind="guard" x="-688" y="-382">time[id]==Period()</label>
+			<label kind="synchronisation" x="-688" y="-365">check_dep[id]!</label>
+			<label kind="assignment" x="-688" y="-348">time[id]=0</label>
+			<nail x="-697" y="-408"/>
 		</transition>
 		<transition>
 			<source ref="id3"/>
 			<target ref="id2"/>
-			<label kind="guard" x="-646" y="-93">exec[id]&gt;=Bcet()&amp;&amp;time[id]&lt;=DeadLine()</label>
-			<label kind="synchronisation" x="-637" y="-34">finish[id]!</label>
-			<label kind="assignment" x="-646" y="-76">released[id]=0,
-running[id]=0</label>
-			<nail x="-654" y="-34"/>
+			<label kind="guard" x="-688" y="-178">exec&gt;=Bcet()</label>
+			<label kind="synchronisation" x="-688" y="-161">finish[id]!</label>
+			<label kind="assignment" x="-688" y="-144">exec=0,
+respt=0</label>
+			<nail x="-697" y="-93"/>
 		</transition>
 		<transition>
 			<source ref="id5"/>
 			<target ref="id4"/>
-			<label kind="synchronisation" x="-365" y="-314">dep_ack[id]?</label>
-			<nail x="-314" y="-340"/>
+			<label kind="synchronisation" x="-272" y="-331">dep_ack[id]?</label>
+			<nail x="-272" y="-408"/>
 		</transition>
 		<transition>
 			<source ref="id6"/>
 			<target ref="id5"/>
-			<label kind="guard" x="-510" y="-433">time[id]==InitOffset()</label>
-			<label kind="synchronisation" x="-518" y="-374">check_dep[id]!</label>
-			<label kind="assignment" x="-510" y="-416">time[id]=0,exec[id]=0,
-respt[id]=0,released[id]=1</label>
+			<label kind="guard" x="-501" y="-484">time[id]==InitOffset()</label>
+			<label kind="synchronisation" x="-501" y="-467">check_dep[id]!</label>
+			<label kind="assignment" x="-501" y="-450">time[id]=0,exec=0,respt=0</label>
 		</transition>
 	</template>
 	<template>
 		<name>DepManager</name>
 		<declaration>int[-1,N] queue[BUFFERSIZE];
 ///int [0,BUFFERSIZE] currt;
-tid_t q;//meta variable too hold the current task id;
+meta tid_t q;//meta variable too hold the current task id;
 void Initial(){
     for(i:int[0,BUFFERSIZE-1]) queue[i]=-1;
     for(i:tid_t) for(j:tid_t) dynDep[i][j]=0;
@@ -236,7 +243,7 @@ void deQueue(int index){
 bool depAck(){
    //// int i;
     for(i:int[0,BUFFERSIZE-1]){
-       if(queue[i]&gt;=0) {if(forall (j:tid_t) dynDep[queue[i]][j]&gt;=staDep[queue[i]][j]) return true;}
+       if(queue[i]&gt;=0) {if(forall (j:tid_t) staDep[queue[i]][j] imply dynDep[queue[i]][j]) return true;}
     }
     return false;
 }
@@ -244,7 +251,7 @@ int[-1,BUFFERSIZE-1] firstDepAck(){
     int[0,N] temp;
     for(i:int [0,BUFFERSIZE-1]){
       if(queue[i]&gt;=0){  
-            if(forall (j:tid_t) dynDep[queue[i]][j]&gt;=staDep[queue[i]][j]){
+            if(forall (j:tid_t) staDep[queue[i]][j] imply dynDep[queue[i]][j]){
                 temp=queue[i];
                 deQueue(i);
                 return temp;}
@@ -255,23 +262,23 @@ int[-1,BUFFERSIZE-1] firstDepAck(){
 
 //upadte the dynmaic dependcy matrix when the find a task who's dependcy is resolved;
 void depAckUpdate(int i){
-    for(j:tid_t){ if(staDep[i][j]==1)dynDep[i][j]--;}
+    for(j:tid_t){ if(staDep[i][j])dynDep[i][j]=false;}
 }
 //upadte the dynamci dependcy matrix when receiving a finish chan;
 void finishUpdate(tid_t i){
    //// for(j:tid_t){ if(staDep[j][i]==1&amp;&amp;dynDep[j][i]==0)  dynDep[j][i]++;}///with out dynDep[j][i]==0 it indicate the producer-consumer problem.
         for(j:tid_t){ 
                         if(staDep[j][i]==1&amp;&amp;dynDep[j][i]==0){
-                            if(Tasks[j].pe==Tasks[i].pe) dynDep[j][i]++;
+                            if(Tasks[j].pe==Tasks[i].pe) dynDep[j][i]=true;
                             else addMsg(j,i);
                                 }
                         }
 }</declaration>
-		<location id="id7" x="-408" y="-306">
-			<name x="-416" y="-340">overflow</name>
+		<location id="id7" x="-442" y="-306">
+			<name x="-450" y="-340">overflow</name>
 		</location>
-		<location id="id8" x="-476" y="-68">
-			<name x="-501" y="-59">DepAck</name>
+		<location id="id8" x="-442" y="-68">
+			<name x="-467" y="-59">DepAck</name>
 			<committed/>
 		</location>
 		<location id="id9" x="-306" y="-204">
@@ -285,9 +292,9 @@ void finishUpdate(tid_t i){
 		<transition>
 			<source ref="id9"/>
 			<target ref="id9"/>
-			<label kind="select" x="-280" y="-119">t:tid_t</label>
-			<label kind="synchronisation" x="-280" y="-102">finish[t]?</label>
-			<label kind="assignment" x="-289" y="-85">finishUpdate(t)</label>
+			<label kind="select" x="-238" y="-119">t:tid_t</label>
+			<label kind="synchronisation" x="-246" y="-102">finish[t]?</label>
+			<label kind="assignment" x="-272" y="-85">finishUpdate(t)</label>
 			<nail x="-306" y="-68"/>
 			<nail x="-170" y="-68"/>
 			<nail x="-170" y="-170"/>
@@ -295,10 +302,11 @@ void finishUpdate(tid_t i){
 		<transition>
 			<source ref="id9"/>
 			<target ref="id9"/>
-			<label kind="select" x="-170" y="-297">t:tid_t</label>
-			<label kind="guard" x="-170" y="-272">!full()</label>
-			<label kind="synchronisation" x="-170" y="-255">check_dep[t]?</label>
-			<label kind="assignment" x="-170" y="-238">enQueue(t)</label>
+			<label kind="select" x="-238" y="-280">t:tid_t</label>
+			<label kind="guard" x="-238" y="-263">!full()</label>
+			<label kind="synchronisation" x="-263" y="-246">check_dep[t]?</label>
+			<label kind="assignment" x="-255" y="-229">enQueue(t)</label>
+			<nail x="-238" y="-306"/>
 			<nail x="-170" y="-306"/>
 			<nail x="-170" y="-204"/>
 			<nail x="-212" y="-204"/>
@@ -306,29 +314,29 @@ void finishUpdate(tid_t i){
 		<transition>
 			<source ref="id9"/>
 			<target ref="id7"/>
-			<label kind="select" x="-433" y="-280">t:tid_t</label>
-			<label kind="guard" x="-433" y="-263">full()</label>
-			<label kind="synchronisation" x="-433" y="-246">check_dep[t]?</label>
+			<label kind="select" x="-433" y="-272">t:tid_t</label>
+			<label kind="guard" x="-433" y="-255">full()</label>
+			<label kind="synchronisation" x="-433" y="-238">check_dep[t]?</label>
 		</transition>
 		<transition>
 			<source ref="id8"/>
 			<target ref="id9"/>
-			<label kind="synchronisation" x="-433" y="-93">dep_ack[q]!</label>
-			<label kind="assignment" x="-450" y="-68">depAckUpdate(q),q=0</label>
-			<nail x="-340" y="-68"/>
+			<label kind="synchronisation" x="-399" y="-110">dep_ack[q]!</label>
+			<label kind="assignment" x="-433" y="-93">depAckUpdate(q)</label>
+			<nail x="-323" y="-68"/>
 		</transition>
 		<transition>
 			<source ref="id9"/>
 			<target ref="id8"/>
-			<label kind="guard" x="-476" y="-187">depAck()</label>
-			<label kind="synchronisation" x="-467" y="-170">urg!</label>
-			<label kind="assignment" x="-476" y="-153">q=firstDepAck()</label>
-			<nail x="-476" y="-204"/>
+			<label kind="guard" x="-433" y="-187">depAck()</label>
+			<label kind="synchronisation" x="-433" y="-170">urg!</label>
+			<label kind="assignment" x="-433" y="-153">q=firstDepAck()</label>
+			<nail x="-442" y="-204"/>
 		</transition>
 		<transition>
 			<source ref="id10"/>
 			<target ref="id9"/>
-			<label kind="assignment" x="-297" y="-272">Initial()</label>
+			<label kind="assignment" x="-323" y="-280">Initial()</label>
 		</transition>
 	</template>
 	<template>
@@ -348,7 +356,7 @@ bool empty(){
     return !busQueue[0].release;
 }
 void receive(){
-     dynDep[busQueue[0].source][busQueue[0].destination]++;
+     dynDep[busQueue[0].source][busQueue[0].destination]=true;
      for(i:int[0,BUSSIZE-2]){
          busQueue[i].release=busQueue[i+1].release;
          busQueue[i].source=busQueue[i+1].source;
@@ -357,7 +365,7 @@ void receive(){
     busQueue[BUSSIZE-1].release=0;
 }</declaration>
 		<location id="id11" x="-807" y="-425">
-			<name x="-790" y="-433">Received</name>
+			<name x="-790" y="-433">Finish</name>
 			<committed/>
 		</location>
 		<location id="id12" x="-671" y="-578">
@@ -365,24 +373,24 @@ void receive(){
 			<committed/>
 		</location>
 		<location id="id13" x="-671" y="-340">
-			<name x="-654" y="-348">InUse</name>
+			<name x="-654" y="-348">Trans</name>
 			<label kind="invariant" x="-739" y="-331">busExec&lt;=bus_wect</label>
 		</location>
 		<location id="id14" x="-671" y="-510">
 			<name x="-654" y="-518">Idle</name>
-			<label kind="invariant" x="-662" y="-501">busExec'==0</label>
+			<label kind="invariant" x="-663" y="-493">busExec'==0</label>
 		</location>
 		<init ref="id12"/>
 		<transition>
 			<source ref="id11"/>
 			<target ref="id14"/>
-			<label kind="assignment" x="-807" y="-501">receive(),busExec=0</label>
+			<label kind="assignment" x="-807" y="-484">receive(),busExec=0</label>
 			<nail x="-807" y="-510"/>
 		</transition>
 		<transition>
 			<source ref="id12"/>
 			<target ref="id14"/>
-			<label kind="assignment" x="-671" y="-561">Initial()</label>
+			<label kind="assignment" x="-663" y="-561">Initial()</label>
 		</transition>
 		<transition>
 			<source ref="id13"/>
@@ -394,9 +402,9 @@ void receive(){
 		<transition>
 			<source ref="id14"/>
 			<target ref="id13"/>
-			<label kind="guard" x="-671" y="-459">!empty()</label>
-			<label kind="synchronisation" x="-671" y="-442">urg!</label>
-			<label kind="assignment" x="-671" y="-425">busExec=0</label>
+			<label kind="guard" x="-663" y="-459">!empty()</label>
+			<label kind="synchronisation" x="-663" y="-442">urg!</label>
+			<label kind="assignment" x="-663" y="-425">busExec=0</label>
 		</transition>
 	</template>
 	<template>
@@ -437,7 +445,7 @@ void setLocal(){
 			<committed/>
 		</location>
 		<location id="id20" x="-816" y="-680">
-			<name x="-833" y="-654">Idle</name>
+			<name x="-824" y="-654">Idle</name>
 		</location>
 		<location id="id21" x="-816" y="-748">
 			<name x="-826" y="-782">Init</name>
@@ -480,13 +488,13 @@ runningid=cpuQueue[pe][0]</label>
 		<transition>
 			<source ref="id17"/>
 			<target ref="id16"/>
-			<label kind="guard" x="-416" y="-637">oldid!=-1&amp;&amp;runningid==tid</label>
-			<label kind="synchronisation" x="-374" y="-620">preempt[oldid]!</label>
+			<label kind="guard" x="-416" y="-646">oldid!=-1&amp;&amp;runningid==tid</label>
+			<label kind="synchronisation" x="-365" y="-629">preempt[oldid]!</label>
 		</transition>
 		<transition>
 			<source ref="id17"/>
 			<target ref="id16"/>
-			<label kind="guard" x="-374" y="-595">oldid==-1</label>
+			<label kind="guard" x="-280" y="-595">oldid==-1</label>
 			<nail x="-204" y="-578"/>
 		</transition>
 		<transition>
@@ -555,7 +563,7 @@ int [-1,BUFFERSIZE] getTid(int[0,BUFFERSIZE-1] index){
 		<transition>
 			<source ref="id23"/>
 			<target ref="id23"/>
-			<label kind="guard" x="-221" y="-161">getTid(pos)!=-1&amp;&amp;
+			<label kind="guard" x="-102" y="-110">getTid(pos)!=-1&amp;&amp;
 time[tid]-Tasks[tid].deadline
 &lt;=time[getTid(pos)]
 -Tasks[getTid(pos)].deadline</label>
@@ -566,25 +574,25 @@ time[tid]-Tasks[tid].deadline
 		<transition>
 			<source ref="id22"/>
 			<target ref="id24"/>
-			<label kind="synchronisation" x="-340" y="-136">sch_pol[pid][EDF]!</label>
-			<label kind="assignment" x="-340" y="-119">resetLocalParam()</label>
-			<nail x="-340" y="102"/>
-			<nail x="-340" y="-238"/>
+			<label kind="synchronisation" x="-323" y="8">sch_pol[pid][EDF]!</label>
+			<label kind="assignment" x="-323" y="25">resetLocalParam()</label>
+			<nail x="-323" y="102"/>
+			<nail x="-323" y="-238"/>
 		</transition>
 		<transition>
 			<source ref="id23"/>
 			<target ref="id22"/>
-			<label kind="guard" x="-340" y="-8">getTid(pos)==-1||
+			<label kind="guard" x="-161" y="-8">getTid(pos)==-1||
 time[tid]-Tasks[tid].deadline&gt;
 time[getTid(pos)]-Tasks[getTid(pos)].deadline</label>
-			<label kind="assignment" x="-340" y="59">insertQueue(pid,tid,pos)</label>
+			<label kind="assignment" x="-161" y="59">insertQueue(pid,tid,pos)</label>
 		</transition>
 		<transition>
 			<source ref="id24"/>
 			<target ref="id23"/>
-			<label kind="select" x="-272" y="-229">p:pid_t</label>
-			<label kind="synchronisation" x="-272" y="-212">sch_pol[p][EDF]?</label>
-			<label kind="assignment" x="-272" y="-195">pid=p,readParam(),
+			<label kind="select" x="-161" y="-212">p:pid_t</label>
+			<label kind="synchronisation" x="-161" y="-195">sch_pol[p][EDF]?</label>
+			<label kind="assignment" x="-161" y="-178">pid=p,readParam(),
 pos=(preempt ? 0:!empty(p))</label>
 		</transition>
 	</template>
@@ -610,44 +618,36 @@ void resetLocalParam(){
     pid=tid=preempt=0;
 }</declaration>
 		<location id="id25" x="-68" y="34">
-			<name x="-110" y="42">Inserted</name>
+			<name x="-136" y="8">Inserted</name>
 			<committed/>
 		</location>
 		<location id="id26" x="-68" y="-170">
-			<name x="-59" y="-161">Idle</name>
+			<name x="-110" y="-161">Idle</name>
 		</location>
 		<init ref="id26"/>
 		<transition>
 			<source ref="id25"/>
 			<target ref="id26"/>
-			<label kind="synchronisation" x="-195" y="-25">sch_pol[pid][RMS]!</label>
-			<label kind="assignment" x="-195" y="0">resetLocalParam()</label>
-			<nail x="-170" y="34"/>
-			<nail x="-170" y="-170"/>
+			<label kind="synchronisation" x="-204" y="-34">sch_pol[pid][RMS]!</label>
+			<label kind="assignment" x="-204" y="-17">resetLocalParam()</label>
+			<nail x="-204" y="34"/>
+			<nail x="-204" y="-170"/>
 		</transition>
 		<transition>
 			<source ref="id26"/>
 			<target ref="id25"/>
-			<label kind="select" x="-94" y="-144">p:pid_t</label>
-			<label kind="synchronisation" x="-144" y="-119">sch_pol[p][RMS]?</label>
-			<label kind="assignment" x="-119" y="-102">pid=p,
+			<label kind="select" x="-59" y="-127">p:pid_t</label>
+			<label kind="synchronisation" x="-59" y="-110">sch_pol[p][RMS]?</label>
+			<label kind="assignment" x="-59" y="-93">pid=p,
 readParam(),
 pol_RMS()</label>
 		</transition>
 	</template>
-	<template>
-		<name>Global</name>
-		<location id="id27" x="0" y="0">
-			<label kind="invariant" x="-119" y="17">forall(i:tid_t)respt[i]'==released[i]&amp;&amp;
-forall(i:tid_t)exec[i]'==running[i]&amp;&amp;
-forall(i:pid_t)cpuUsed[i]'==!empty(i)</label>
-		</location>
-		<init ref="id27"/>
-	</template>
 	<system>
-		
+		// Place template instantiations here.
+
 const processors pes ={
-	{0,RMS,true},
+	{0,EDF,true},
 	{1,EDF,true}
 };
 bus = BUS(1,1);
@@ -655,5 +655,5 @@ bus = BUS(1,1);
 
 scheduler=Scheduler(pes);
 // List one or more processes to be composed into a system.
-system Task,DepManager,bus,scheduler,policy_EDF,policy_RMS,Global;</system>
+system Task,DepManager,bus,scheduler,policy_EDF,policy_RMS;</system>
 </nta>
