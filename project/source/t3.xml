@@ -1,5 +1,5 @@
 
-</declaration>
+//</declaration>
 	<template>
 		<name x="9" y="9">Task</name>
 		<parameter>const tid_t id</parameter>
@@ -241,7 +241,12 @@ void finishUpdate(tid_t i){
 	<template>
 		<name>BUS</name>
 		<parameter>time_t bus_bect,time_t bus_wect</parameter>
-		<declaration>
+		<declaration>/////int [-1,N] busQueue[BUFFERSIZE];
+/*typedef struct{
+    bool release;
+    tid_t source;
+    tid_t destination;
+}msg;*/
 clock busExec;
 void Initial(){
      for(i:int[0,BUSSIZE-1]) busQueue[i].release=0;
@@ -538,5 +543,5 @@ pol_RMS()</label>
 		</transition>
 	</template>
 	<system>
-// Place template instantiations here.
+		// Place template instantiations here.
 

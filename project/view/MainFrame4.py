@@ -159,7 +159,7 @@ class MainFrame(wx.Frame):
         h_text_sizer = wx.BoxSizer(wx.HORIZONTAL)
         tname = wx.StaticText(self.mainPanel, label="t_id:", size=(70, -1))
         h_text_sizer.Add(tname, flag=wx.LEFT, border=10)
-        offset = wx.StaticText(self.mainPanel, label="offset: ", size=(70, -1))
+        offset = wx.StaticText(self.mainPanel, label="ioffset: ", size=(70, -1))
         h_text_sizer.Add(offset, flag=wx.LEFT, border=10)
         bcet = wx.StaticText(self.mainPanel, label="bcet: ", size=(70, -1))
         h_text_sizer.Add(bcet, flag=wx.LEFT, border=10)
@@ -417,21 +417,21 @@ class MainFrame(wx.Frame):
                 for j in i:
                     if index == 0:
                         if j == 'Time  ':
-                            temp = wx.StaticText(self.mainPanel, label=j, size=(50, -1))
+                            temp = wx.StaticText(self.mainPanel, label=j, size=(40, -1))
                         else:
-                            temp = wx.StaticText(self.mainPanel, label=j, size=(50, -1))
+                            temp = wx.StaticText(self.mainPanel, label=j, size=(40, -1))
                         temp.SetBackgroundColour('#666666')
                     else:
                         if j == 'O':
-                            temp = wx.StaticText(self.mainPanel, label=j, size=(50, -1))
+                            temp = wx.StaticText(self.mainPanel, label=j, size=(40, -1))
                             temp.SetBackgroundColour('#CCCCCC')
                         elif j == '+':
-                            temp = wx.StaticText(self.mainPanel, label=j, size=(50, -1))
+                            temp = wx.StaticText(self.mainPanel, label=j, size=(40, -1))
                             temp.SetBackgroundColour('#999999')
                         elif j == 'X':
-                            temp = wx.StaticText(self.mainPanel, label='Error', size=(50, -1))
+                            temp = wx.StaticText(self.mainPanel, label='Error', size=(40, -1))
                         else:
-                            temp = wx.StaticText(self.mainPanel, label=j, size=(50, -1))
+                            temp = wx.StaticText(self.mainPanel, label=j, size=(40, -1))
                     self.resultGird.Add(temp)
             self.mainSizer.Add(self.resultGird, flag=wx.LEFT | wx.TOP, border=10)
 

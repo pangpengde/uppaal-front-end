@@ -1,0 +1,12 @@
+[processor]
+p0 = 0,RMS,true
+p1 = 1,RMS,true
+
+[bus]
+bcet = 0
+wcet = 0
+
+[task]
+t0 = 0,0,1,2,2,2,0
+t1 = 1,0,1,2,2,2,1
+

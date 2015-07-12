@@ -647,7 +647,7 @@ forall(i:pid_t)cpuUsed[i]'==!empty(i)</label>
 	<system>
 		
 const processors pes ={
-	{0,RMS,true},
+	{0,EDF,true},
 	{1,EDF,true}
 };
 bus = BUS(1,1);
